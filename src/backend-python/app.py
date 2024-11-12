@@ -1,33 +1,33 @@
-import mysql.connector
+import pymysql
 from flask import Flask, jsonify
-from mysql.connector import Error
 
 app = Flask(__name__)
 
-# Configuración de conexión a MySQL
 db_config = {
-    'user': 'root',         # Reemplaza con tu usuario de MySQL
-    'password': 'sonina',    # Reemplaza con tu contraseña de MySQL
-    'host': '127.0.0.1',     # Host de MySQL
-    'database': 'menuplanner'  # Nombre de la base de datos
+    'user': 'root',
+    'password': 'nueva_contraseña',
+    'host': '127.0.0.1',
+    'database': 'menuplanner'
 }
 
-# Probar la conexión a la base de datos
 @app.route('/api/test_db_connection', methods=['GET'])
 def test_db_connection():
+    conn = None  # Inicializar la variable conn como None
     try:
-        # Usar 'with' para gestionar la conexión de forma más segura
-        with mysql.connector.connect(**db_config) as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("SELECT * FROM usuarios")  
-                users = cursor.fetchall()
-                if not users:
-                    return jsonify(message="No se encontraron usuarios en la base de datos."), 404
+        conn = pymysql.connect(**db_config)
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM usuarios")
+            users = cursor.fetchall()
+            if not users:
+                return jsonify(message="No se encontraron usuarios en la base de datos."), 404
 
-                return jsonify(message="Conexión exitosa a la base de datos!", users=users), 200
-
-    except Error as err:
+            return jsonify(message="Conexión exitosa a la base de datos!", users=users), 200
+    except pymysql.MySQLError as err:
         return jsonify(error=f"Error al conectar a la base de datos: {str(err)}"), 500
+    finally:
+        if conn:  # Verifica si conn tiene un valor antes de cerrarla
+            conn.close()
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=5000, debug=True)  # debug=True solo en desarrollo
+    app.run(host='127.0.0.1', port=5000, debug=True)
+
