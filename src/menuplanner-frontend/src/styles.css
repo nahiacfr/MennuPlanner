@@ -46,4 +46,70 @@
   button:hover {
     background-color: #2E4A34;
   }
+  /* Estilos para el calendario semanal y las recetas */
+.weekly-calendar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.favorites-bar {
+  background-color: #9BC89E;
+  padding: 10px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.favorites-container {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 10px 0;
+}
+
+.recipe-card {
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid #3B553E;
+  padding: 5px;
+  text-align: center;
+  width: 100px;
+  cursor: grab;
+}
+
+.recipe-card img {
+  width: 100%;
+  border-radius: 5px;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+}
+
+.day-column {
+  background-color: #9BC89E;
+  padding: 10px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.meal-slot {
+  background-color: #F5F5F5;
+  border: 1px dashed #3B553E;
+  border-radius: 5px;
+  margin: 5px 0;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-slot {
+  color: #3B553E;
+  font-size: 24px;
+  cursor: pointer;
+}
+
   
