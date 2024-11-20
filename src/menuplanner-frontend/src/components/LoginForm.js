@@ -1,54 +1,43 @@
-// src/components/LoginForm.js
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import { login } from "../api";
 
-const LoginForm = ({ onLogin }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+const LoginForm = ({ onLogin, onSwitchToRegister }) => {
+  const [correo, setCorreo] = useState("");
+  const [contrasena, setContrasena] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ correo: email, contrasena: password }),
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        alert('Login exitoso');
-        onLogin(data.token); // Aquí puedes manejar el token
-      } else {
-        alert(`Error: ${data.error}`);
-      }
-    } catch (error) {
-      console.error('Error al iniciar sesión:', error);
+      const { token } = await login(correo, contrasena);
+      onLogin(token);
+      setError("");
+    } catch (err) {
+      setError(err.message);
     }
   };
 
   return (
-    <div className="form-container">
-      <h2>MenuPLanner</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Usuario:</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+    <div className="app-container">
+      <form onSubmit={handleSubmit} className="form-container">
+        <h2>MenuPlanner</h2>
+        <input
+          type="email"
+          placeholder="Usuario"
+          value={correo}
+          onChange={(e) => setCorreo(e.target.value)}
+        />
+        <input
+          type="password"
+          placeholder="Contraseña"
+          value={contrasena}
+          onChange={(e) => setContrasena(e.target.value)}
+        />
+        <div>
+          <button type="submit">Login</button>
+          <button type="button" onClick={onSwitchToRegister}>Registrarme</button>
         </div>
-        <div className="form-group">
-          <label>Contraseña:</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit">LOGIN</button>
+        {error && <p className="error">{error}</p>}
       </form>
     </div>
   );

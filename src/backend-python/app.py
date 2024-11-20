@@ -2,9 +2,10 @@ from flask import Flask, request, jsonify
 import jwt
 import datetime
 # import mysql.connector  # Descomenta esto cuando uses MySQL
+from flask_cors import CORS
 
 app = Flask(__name__)
-
+CORS(app)
 # Clave secreta para generar tokens (en producción, usa algo más seguro)
 SECRET_KEY = 'mi_clave_secreta'
 

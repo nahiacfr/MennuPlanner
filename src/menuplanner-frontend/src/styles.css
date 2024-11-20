@@ -1,12 +1,85 @@
-/* src/styles.css */
+/* Contenedor principal para centrar el formulario */
+.app-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Altura completa de la ventana */
+  background-color: #F5F5F5; /* Color de fondo suave */
+}
+
+/* Contenedor de los formularios */
 .form-container {
-    background-color: #9BC89E;
-    padding: 20px;
-    border-radius: 10px;
-    max-width: 400px;
-    margin: 50px auto;
-    text-align: center;
+  background-color: #9BC89E; /* Color de fondo verde */
+  padding: 30px;
+  border-radius: 20px; /* Bordes redondeados */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Sombra para efecto emergente */
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+
+/* Título del formulario */
+.form-container h2 {
+  color: #3B553E;
+  font-family: 'Arial', sans-serif;
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+
+/* Campos de entrada */
+.form-container input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px; /* Bordes redondeados */
+  border: 1px solid #3B553E;
+  margin-bottom: 15px;
+  font-size: 16px;
+}
+
+/* Botones */
+.form-container button {
+  width: 48%; /* Ajusta el tamaño para botones lado a lado */
+  padding: 10px;
+  background-color: #3B553E;
+  color: white;
+  border: none;
+  border-radius: 10px; /* Bordes redondeados */
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  margin: 5px;
+}
+
+.form-container button:hover {
+  background-color: #2E4A34;
+  transform: scale(1.05); /* Pequeño zoom al pasar */
+}
+
+/* Mensajes de error y éxito */
+.form-container .error {
+  color: #FF4C4C;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.form-container .success {
+  color: #3B553E;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+  .form-container {
+    max-width: 90%; /* Ajuste para pantallas pequeñas */
   }
+
+  .form-container button {
+    width: 100%; /* Botones apilados */
+  }
+}
+
   
   h2 {
     color: #3B553E;
