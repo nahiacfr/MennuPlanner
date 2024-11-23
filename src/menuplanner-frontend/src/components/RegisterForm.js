@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { register } from "../api";
 
-const RegisterForm = ({ onRegister }) => {
+const RegisterForm = ({ onRegister, onSwitchToLogin }) => {
   const [nombre, setNombre] = useState("");
   const [correo, setCorreo] = useState("");
   const [contrasena, setContrasena] = useState("");
@@ -45,7 +45,10 @@ const RegisterForm = ({ onRegister }) => {
         />
         <div>
           <button type="submit">Registrar</button>
-          <button type="button">Ir a Login</button>
+          {/* Llamar a onSwitchToLogin cuando se haga clic en "Ir a Login" */}
+          <button type="button" onClick={onSwitchToLogin}>
+            Ir a Login
+          </button>
         </div>
         {error && <p className="error">{error}</p>}
         {success && <p className="success">{success}</p>}
@@ -55,4 +58,3 @@ const RegisterForm = ({ onRegister }) => {
 };
 
 export default RegisterForm;
-

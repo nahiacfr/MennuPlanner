@@ -1,10 +1,9 @@
-// src/components/RecipeViewer.js
 import React, { useState } from 'react';
 import RecipeCard from './RecipeCards';
 import RecipeDetails from './RecipeDetails';
 import '../styles.css';
 
-const RecipeViewer = ({ availableRecipes }) => {
+const RecipeViewer = ({ availableRecipes, onAddRecipe }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedRecipe, setSelectedRecipe] = useState(null); // Estado para la receta seleccionada
   const recipesPerPage = 4;
@@ -34,7 +33,9 @@ const RecipeViewer = ({ availableRecipes }) => {
       {selectedRecipe ? (
         // Mostrar los detalles de la receta si se seleccionó una
         <div>
-          <button onClick={handleBackToRecipes} className="back-button">Volver a Recetas</button>
+          <button onClick={handleBackToRecipes} className="back-button">
+            Volver a Recetas
+          </button>
           <RecipeDetails
             recipe={selectedRecipe}
             onAddToFavorites={() => alert(`${selectedRecipe.name} añadido a favoritos!`)}
@@ -45,6 +46,9 @@ const RecipeViewer = ({ availableRecipes }) => {
         // Mostrar la lista de recetas si no se ha seleccionado ninguna
         <div>
           <h3>Recetas Disponibles</h3>
+          <button onClick={onAddRecipe} className="add-recipe-button">
+            Registrar Receta
+          </button>
           <div className="recipe-grid">
             {currentRecipes.map((recipe, index) => (
               <div key={index} onClick={() => handleRecipeClick(recipe)}>

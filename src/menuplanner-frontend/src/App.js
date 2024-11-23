@@ -14,23 +14,30 @@ function App() {
   const handleLogin = async (token) => {
     setIsLoggedIn(true);
     setToken(token);
-    const recipes = await getRecipes(); // Obtener recetas tras login
-    setRecipes(recipes);
+    try {
+      const recipes = await getRecipes(token); // Pasar el token para obtener recetas
+      setRecipes(recipes);
+    } catch (err) {
+      console.error('Error al obtener recetas:', err.message);
+    }
   };
+
+  const handleSwitchToRegister = () => setShowLogin(false);
+  const handleSwitchToLogin = () => setShowLogin(true);
 
   return (
     <div className="App">
       {!isLoggedIn ? (
         showLogin ? (
-          <>
-            <LoginForm onLogin={handleLogin} onSwitchToRegister={() => setShowLogin(false)} />
-            <button onClick={() => setShowLogin(false)}>Ir a Registro</button>
-          </>
+          <LoginForm 
+            onLogin={handleLogin} 
+            onSwitchToRegister={handleSwitchToRegister} 
+          />
         ) : (
-          <>
-            <RegisterForm onRegister={() => setShowLogin(true)} />
-            <button onClick={() => setShowLogin(true)}>Ir a Login</button>
-          </>
+          <RegisterForm 
+            onRegister={handleSwitchToLogin} 
+            onSwitchToLogin={handleSwitchToLogin} 
+          />
         )
       ) : (
         <>

@@ -2,7 +2,7 @@
 
 const API_URL = 'http://localhost:5000/api';
 
-// Función para registrar un usuario
+// Exportar las funciones de forma nombrada
 export const register = async (nombre, correo, contrasena) => {
   const response = await fetch(`${API_URL}/register`, {
     method: 'POST',
@@ -17,7 +17,6 @@ export const register = async (nombre, correo, contrasena) => {
   return response.json();
 };
 
-// Función para iniciar sesión
 export const login = async (correo, contrasena) => {
   const response = await fetch(`${API_URL}/login`, {
     method: 'POST',
@@ -29,18 +28,20 @@ export const login = async (correo, contrasena) => {
     throw new Error((await response.json()).error || 'Error al iniciar sesión');
   }
 
-  return response.json(); // Devolverá el token
+  return response.json();
 };
 
-// Función para obtener recetas
-export const getRecipes = async () => {
+export const getRecipes = async (token) => {
   const response = await fetch(`${API_URL}/recipes`, {
     method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`, // Token JWT en el encabezado
+    },
   });
 
   if (!response.ok) {
     throw new Error('Error al obtener recetas');
   }
 
-  return response.json(); // Devuelve las recetas
+  return response.json();
 };

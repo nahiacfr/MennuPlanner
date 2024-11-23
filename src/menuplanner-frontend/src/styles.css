@@ -6,7 +6,20 @@
   height: 100vh; /* Altura completa de la ventana */
   background-color: #F5F5F5; /* Color de fondo suave */
 }
+.add-recipe-button {
+  margin: 10px 0;
+  padding: 10px 15px;
+  font-size: 16px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
 
+.add-recipe-button:hover {
+  background-color: #45a049;
+}
 /* Contenedor de los formularios */
 .form-container {
   background-color: #9BC89E; /* Color de fondo verde */

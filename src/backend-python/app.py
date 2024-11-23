@@ -1,12 +1,15 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import jwt
 import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
 # import mysql.connector  # Descomenta esto cuando uses MySQL
-from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
-# Clave secreta para generar tokens (en producción, usa algo más seguro)
+
+# Clave secreta para generar tokens (en producción, usa una más segura)
 SECRET_KEY = 'mi_clave_secreta'
 
 # Simulación de "base de datos" en memoria
@@ -21,6 +24,23 @@ recetas = []
 #     'database': 'menuplanner'
 # }
 
+# Decorador para verificar tokens JWT
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if not token:
+            return jsonify(error='Token es requerido'), 401
+        try:
+            jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            return jsonify(error='El token ha expirado'), 401
+        except jwt.InvalidTokenError:
+            return jsonify(error='Token inválido'), 401
+        return f(*args, **kwargs)
+    return decorated
+
+# Ruta para registrar usuarios
 @app.route('/api/register', methods=['POST'])
 def register_user():
     data = request.get_json()
@@ -36,13 +56,16 @@ def register_user():
         if usuario['correo'] == correo:
             return jsonify(error='El correo ya está registrado'), 400
 
+    # Hash de la contraseña
+    hashed_password = generate_password_hash(contrasena)
+
     # Insertar en MySQL (comentado por ahora)
     # try:
     #     conn = mysql.connector.connect(**db_config)
     #     cursor = conn.cursor()
     #     cursor.execute(
     #         "INSERT INTO usuarios (nombre, correo, contrasena) VALUES (%s, %s, %s)",
-    #         (nombre, correo, contrasena)
+    #         (nombre, correo, hashed_password)
     #     )
     #     conn.commit()
     #     cursor.close()
@@ -54,12 +77,13 @@ def register_user():
     nuevo_usuario = {
         'nombre': nombre,
         'correo': correo,
-        'contrasena': contrasena  # Nota: en producción, nunca guardes contraseñas sin cifrar
+        'contrasena': hashed_password  # Guardar el hash
     }
     usuarios.append(nuevo_usuario)
 
     return jsonify(message='Usuario registrado exitosamente'), 201
 
+# Ruta para iniciar sesión
 @app.route('/api/login', methods=['POST'])
 def login_user():
     data = request.get_json()
@@ -71,7 +95,7 @@ def login_user():
 
     # Verificar credenciales (simulación)
     for usuario in usuarios:
-        if usuario['correo'] == correo and usuario['contrasena'] == contrasena:
+        if usuario['correo'] == correo and check_password_hash(usuario['contrasena'], contrasena):
             # Generar un token de autenticación
             token = jwt.encode(
                 {
@@ -87,11 +111,11 @@ def login_user():
     # try:
     #     conn = mysql.connector.connect(**db_config)
     #     cursor = conn.cursor(dictionary=True)
-    #     cursor.execute("SELECT * FROM usuarios WHERE correo = %s AND contrasena = %s", (correo, contrasena))
+    #     cursor.execute("SELECT * FROM usuarios WHERE correo = %s", (correo,))
     #     user = cursor.fetchone()
     #     cursor.close()
     #     conn.close()
-    #     if user:
+    #     if user and check_password_hash(user['contrasena'], contrasena):
     #         token = jwt.encode(
     #             {
     #                 'correo': correo,
@@ -106,7 +130,9 @@ def login_user():
 
     return jsonify(error='Correo o contraseña incorrectos'), 401
 
+# Ruta para agregar recetas
 @app.route('/api/recipes', methods=['POST'])
+@token_required
 def add_recipe():
     data = request.get_json()
     nombre = data.get('nombre')
@@ -145,7 +171,9 @@ def add_recipe():
 
     return jsonify(message='Receta añadida exitosamente', receta=nueva_receta), 201
 
+# Ruta para obtener recetas
 @app.route('/api/recipes', methods=['GET'])
+@token_required
 def get_recipes():
     # Obtener recetas desde MySQL (comentado por ahora)
     # try:
@@ -164,6 +192,4 @@ def get_recipes():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-
-
 

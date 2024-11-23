@@ -8,6 +8,10 @@ const LoginForm = ({ onLogin, onSwitchToRegister }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!correo || !contrasena) {
+      setError("Todos los campos son obligatorios");
+      return;
+    }
     try {
       const { token } = await login(correo, contrasena);
       onLogin(token);
