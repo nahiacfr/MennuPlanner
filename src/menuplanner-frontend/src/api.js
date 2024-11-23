@@ -1,5 +1,3 @@
-// src/api.js
-
 const API_URL = 'http://localhost:5000/api';
 
 // Exportar las funciones de forma nombrada
@@ -41,6 +39,40 @@ export const getRecipes = async (token) => {
 
   if (!response.ok) {
     throw new Error('Error al obtener recetas');
+  }
+
+  return response.json();
+};
+
+// Obtener el menú semanal desde la API
+export const getWeeklyMenu = async (token) => {
+  const response = await fetch(`${API_URL}/weekly_menu`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`, // Token JWT en el encabezado
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Error al obtener el menú semanal');
+  }
+
+  return response.json();
+};
+
+// Guardar el menú semanal en la API
+export const saveWeeklyMenu = async (menu, token) => {
+  const response = await fetch(`${API_URL}/weekly_menu`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ menu }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Error al guardar el menú semanal');
   }
 
   return response.json();

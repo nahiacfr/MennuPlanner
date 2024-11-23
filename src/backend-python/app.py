@@ -18,10 +18,10 @@ recetas = []
 
 # Configuración de conexión a MySQL (comentada por ahora)
 # db_config = {
-#     'user': 'tu_usuario',
-#     'password': 'tu_contraseña',
-#     'host': 'localhost',
-#     'database': 'menuplanner'
+#     'user': 'tu_usuario',  # Reemplaza con tu usuario de MySQL
+#     'password': 'tu_contraseña',  # Reemplaza con tu contraseña de MySQL
+#     'host': 'localhost',  # O la dirección de tu servidor MySQL
+#     'database': 'menuplanner'  # Reemplaza con tu nombre de base de datos
 # }
 
 # Decorador para verificar tokens JWT

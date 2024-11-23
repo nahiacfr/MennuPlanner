@@ -1,12 +1,10 @@
-// src/components/RecipeViewer.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import RecipeCard from './RecipeCards';
-import RecipeDetails from './RecipeDetails';
-import '../styles.css';
+import { Link } from 'react-router-dom'; // Para manejar la navegación entre páginas
 
-const RecipeViewer = ({ availableRecipes, onAddRecipeClick }) => {  // Cambiar el nombre del prop aquí
+const RecipeViewer = ({ availableRecipes, onAddRecipeClick, onShowMenuClick }) => {
   const [currentPage, setCurrentPage] = useState(0);
-  const [selectedRecipe, setSelectedRecipe] = useState(null); // Estado para la receta seleccionada
+  const [selectedRecipe, setSelectedRecipe] = useState(null);
   const recipesPerPage = 4;
 
   const startIndex = currentPage * recipesPerPage;
@@ -22,49 +20,40 @@ const RecipeViewer = ({ availableRecipes, onAddRecipeClick }) => {  // Cambiar e
   };
 
   const handleRecipeClick = (recipe) => {
-    setSelectedRecipe(recipe); // Establecer la receta seleccionada
+    setSelectedRecipe(recipe);
   };
 
   const handleBackToRecipes = () => {
-    setSelectedRecipe(null); // Volver a la lista de recetas
+    setSelectedRecipe(null);
   };
 
   return (
     <div className="recipe-viewer">
       {selectedRecipe ? (
-        // Mostrar los detalles de la receta si se seleccionó una
         <div>
-          <button onClick={handleBackToRecipes} className="back-button">
-            Volver a Recetas
-          </button>
-          <RecipeDetails
-            recipe={selectedRecipe}
-            onAddToFavorites={() => alert(`${selectedRecipe.name} añadido a favoritos!`)}
-            onEdit={() => alert(`Editando ${selectedRecipe.name}`)}
-          />
+          <button onClick={handleBackToRecipes}>Volver a Recetas</button>
+          <RecipeCard recipe={selectedRecipe} />
         </div>
       ) : (
-        // Mostrar la lista de recetas si no se ha seleccionado ninguna
         <div>
           <h3>Recetas Disponibles</h3>
-          <button onClick={onAddRecipeClick} className="add-recipe-button">Registrar Receta</button>  {/* Cambiar el nombre aquí */}
+          <button onClick={onAddRecipeClick}>Registrar Receta</button>
+          <div>
+          <button onClick={onShowMenuClick}>Mostrar Menú</button>
+          </div>
           <div className="recipe-grid">
-            {currentRecipes.map((recipe, index) => (
-              <div key={index} onClick={() => handleRecipeClick(recipe)}>
-                <RecipeCard recipe={recipe} draggable={false} />
+            {currentRecipes.map((recipe) => (
+              <div key={recipe.id} onClick={() => handleRecipeClick(recipe)}>
+                <RecipeCard recipe={recipe} />
               </div>
             ))}
           </div>
           <div className="pagination-controls">
-            <button onClick={prevPage} disabled={currentPage === 0} className="pagination-button">
-              &lt; Anterior
+            <button onClick={prevPage} disabled={currentPage === 0}>
+              Anterior
             </button>
-            <button
-              onClick={nextPage}
-              disabled={endIndex >= availableRecipes.length}
-              className="pagination-button"
-            >
-              Siguiente &gt;
+            <button onClick={nextPage} disabled={endIndex >= availableRecipes.length}>
+              Siguiente
             </button>
           </div>
         </div>

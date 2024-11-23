@@ -1,10 +1,10 @@
-// src/App.js
 import React, { useState } from 'react';
 import './styles.css';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 import RecipeViewer from './components/RecipeViewer';
 import AñadirReceta from './components/AñadirReceta';  // Importar AñadirReceta
+import WeeklyCalendar from './components/WeeklyCalendar';  // Importar el componente de menú semanal
 import { getRecipes } from './api';
 
 function App() {
@@ -13,6 +13,7 @@ function App() {
   const [recipes, setRecipes] = useState([]);
   const [token, setToken] = useState(null);
   const [showAddRecipeForm, setShowAddRecipeForm] = useState(false); // Estado para controlar si se muestra el formulario
+  const [showMenu, setShowMenu] = useState(false); // Estado para mostrar el menú semanal
 
   // Función para manejar el login
   const handleLogin = async (token) => {
@@ -34,6 +35,11 @@ function App() {
   const addNewRecipe = (newRecipe) => {
     setRecipes((prevRecipes) => [...prevRecipes, newRecipe]);
     setShowAddRecipeForm(false); // Cerrar el formulario después de añadir la receta
+  };
+
+  // Función para mostrar el menú semanal
+  const showWeeklyMenu = () => {
+    setShowMenu(true); // Cambiar el estado para mostrar el menú
   };
 
   return (
@@ -58,12 +64,16 @@ function App() {
               onAddRecipe={addNewRecipe} 
               onCancel={() => setShowAddRecipeForm(false)} 
             />
+          ) : showMenu ? (
+            // Mostrar el menú semanal
+            <WeeklyCalendar token={token} />
           ) : (
             <>
               <h2>Recetas Disponibles</h2>
               <RecipeViewer 
                 availableRecipes={recipes} 
                 onAddRecipeClick={() => setShowAddRecipeForm(true)}  // Mostrar el formulario de añadir receta
+                onShowMenuClick={showWeeklyMenu}  // Aquí se pasa la función para mostrar el menú
               />
             </>
           )}
@@ -74,3 +84,4 @@ function App() {
 }
 
 export default App;
+

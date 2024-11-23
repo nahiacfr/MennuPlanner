@@ -404,4 +404,62 @@
 .cancel-button:hover {
   background-color: #e53935;
 }
+
+.weekly-menu-button {
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.weekly-menu-button:hover {
+  background-color: #45a049;
+}
+
+.weekly-calendar {
+  display: flex;
+  margin-top: 20px;
+}
+
+.favorites-bar {
+  width: 200px;
+  margin-right: 20px;
+}
+
+.favorites-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.calendar-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.day-column {
+  width: 100px;
+  margin: 10px;
+}
+
+.meal-slot {
+  width: 100px;
+  height: 100px;
+  border: 1px solid #ccc;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.empty-slot {
+  background-color: #f0f0f0;
+  line-height: 100px;
+}
+
+.favorites-container {
+  margin-top: 10px;
+}
+
   
