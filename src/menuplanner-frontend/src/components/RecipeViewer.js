@@ -1,9 +1,10 @@
+// src/components/RecipeViewer.js
 import React, { useState } from 'react';
 import RecipeCard from './RecipeCards';
 import RecipeDetails from './RecipeDetails';
 import '../styles.css';
 
-const RecipeViewer = ({ availableRecipes, onAddRecipe }) => {
+const RecipeViewer = ({ availableRecipes, onAddRecipeClick }) => {  // Cambiar el nombre del prop aquí
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedRecipe, setSelectedRecipe] = useState(null); // Estado para la receta seleccionada
   const recipesPerPage = 4;
@@ -46,9 +47,7 @@ const RecipeViewer = ({ availableRecipes, onAddRecipe }) => {
         // Mostrar la lista de recetas si no se ha seleccionado ninguna
         <div>
           <h3>Recetas Disponibles</h3>
-          <button onClick={onAddRecipe} className="add-recipe-button">
-            Registrar Receta
-          </button>
+          <button onClick={onAddRecipeClick} className="add-recipe-button">Registrar Receta</button>  {/* Cambiar el nombre aquí */}
           <div className="recipe-grid">
             {currentRecipes.map((recipe, index) => (
               <div key={index} onClick={() => handleRecipeClick(recipe)}>

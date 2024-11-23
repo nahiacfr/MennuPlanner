@@ -1,8 +1,10 @@
+// src/App.js
 import React, { useState } from 'react';
 import './styles.css';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 import RecipeViewer from './components/RecipeViewer';
+import AñadirReceta from './components/AñadirReceta';  // Importar AñadirReceta
 import { getRecipes } from './api';
 
 function App() {
@@ -10,7 +12,9 @@ function App() {
   const [showLogin, setShowLogin] = useState(true);
   const [recipes, setRecipes] = useState([]);
   const [token, setToken] = useState(null);
+  const [showAddRecipeForm, setShowAddRecipeForm] = useState(false); // Estado para controlar si se muestra el formulario
 
+  // Función para manejar el login
   const handleLogin = async (token) => {
     setIsLoggedIn(true);
     setToken(token);
@@ -22,8 +26,15 @@ function App() {
     }
   };
 
+  // Funciones para cambiar entre Login y Register
   const handleSwitchToRegister = () => setShowLogin(false);
   const handleSwitchToLogin = () => setShowLogin(true);
+
+  // Función para agregar una nueva receta
+  const addNewRecipe = (newRecipe) => {
+    setRecipes((prevRecipes) => [...prevRecipes, newRecipe]);
+    setShowAddRecipeForm(false); // Cerrar el formulario después de añadir la receta
+  };
 
   return (
     <div className="App">
@@ -41,8 +52,21 @@ function App() {
         )
       ) : (
         <>
-          <h2>Recetas Disponibles</h2>
-          <RecipeViewer availableRecipes={recipes} />
+          {showAddRecipeForm ? (
+            // Mostrar el formulario de añadir receta
+            <AñadirReceta 
+              onAddRecipe={addNewRecipe} 
+              onCancel={() => setShowAddRecipeForm(false)} 
+            />
+          ) : (
+            <>
+              <h2>Recetas Disponibles</h2>
+              <RecipeViewer 
+                availableRecipes={recipes} 
+                onAddRecipeClick={() => setShowAddRecipeForm(true)}  // Mostrar el formulario de añadir receta
+              />
+            </>
+          )}
         </>
       )}
     </div>
@@ -50,4 +74,3 @@ function App() {
 }
 
 export default App;
-
