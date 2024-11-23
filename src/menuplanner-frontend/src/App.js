@@ -1,3 +1,4 @@
+// src/App.js
 import React, { useState } from 'react';
 import './styles.css';
 import LoginForm from './components/LoginForm';
@@ -11,6 +12,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showLogin, setShowLogin] = useState(true);
   const [recipes, setRecipes] = useState([]);
+  const [favoriteRecipes, setFavoriteRecipes] = useState([]); // Estado para manejar las recetas favoritas
   const [token, setToken] = useState(null);
   const [showAddRecipeForm, setShowAddRecipeForm] = useState(false); // Estado para controlar si se muestra el formulario
   const [showMenu, setShowMenu] = useState(false); // Estado para mostrar el menú semanal
@@ -42,6 +44,11 @@ function App() {
     setShowMenu(true); // Cambiar el estado para mostrar el menú
   };
 
+  // Función para agregar receta a favoritos
+  const addToFavorites = (recipe) => {
+    setFavoriteRecipes((prevFavorites) => [...prevFavorites, recipe]);
+  };
+
   return (
     <div className="App">
       {!isLoggedIn ? (
@@ -66,7 +73,11 @@ function App() {
             />
           ) : showMenu ? (
             // Mostrar el menú semanal
-            <WeeklyCalendar token={token} />
+            <WeeklyCalendar 
+              token={token} 
+              favoriteRecipes={favoriteRecipes} 
+              setFavoriteRecipes={setFavoriteRecipes} 
+            />
           ) : (
             <>
               <h2>Recetas Disponibles</h2>
@@ -74,6 +85,7 @@ function App() {
                 availableRecipes={recipes} 
                 onAddRecipeClick={() => setShowAddRecipeForm(true)}  // Mostrar el formulario de añadir receta
                 onShowMenuClick={showWeeklyMenu}  // Aquí se pasa la función para mostrar el menú
+                onAddToFavorites={addToFavorites} // Pasar la función para añadir a favoritos
               />
             </>
           )}
@@ -84,4 +96,3 @@ function App() {
 }
 
 export default App;
-

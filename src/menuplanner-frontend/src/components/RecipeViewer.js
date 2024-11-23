@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import RecipeCard from './RecipeCards';
-import { Link } from 'react-router-dom'; // Para manejar la navegación entre páginas
+import React, { useState } from 'react';
+import RecipeCard from './RecipeCards';  // Asegúrate de tener este componente
+import RecipeDetails from './RecipeDetails';  // Importa el componente RecipeDetails
 
-const RecipeViewer = ({ availableRecipes, onAddRecipeClick, onShowMenuClick }) => {
+const RecipeViewer = ({ availableRecipes, onAddRecipeClick, onShowMenuClick, onAddToFavorites }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const recipesPerPage = 4;
@@ -20,26 +20,32 @@ const RecipeViewer = ({ availableRecipes, onAddRecipeClick, onShowMenuClick }) =
   };
 
   const handleRecipeClick = (recipe) => {
-    setSelectedRecipe(recipe);
+    setSelectedRecipe(recipe);  // Establece la receta seleccionada
   };
 
   const handleBackToRecipes = () => {
-    setSelectedRecipe(null);
+    setSelectedRecipe(null);  // Vuelve a mostrar la lista de recetas
   };
 
   return (
     <div className="recipe-viewer">
       {selectedRecipe ? (
+        // Mostrar detalles de la receta seleccionada
         <div>
           <button onClick={handleBackToRecipes}>Volver a Recetas</button>
-          <RecipeCard recipe={selectedRecipe} />
+          <RecipeDetails 
+            recipe={selectedRecipe} 
+            onAddToFavorites={() => onAddToFavorites(selectedRecipe)} // Llamar a la función para añadir a favoritos
+            onEdit={() => console.log('Editar receta:', selectedRecipe)}  // Función de ejemplo para editar
+          />
         </div>
       ) : (
+        // Mostrar lista de recetas
         <div>
           <h3>Recetas Disponibles</h3>
           <button onClick={onAddRecipeClick}>Registrar Receta</button>
           <div>
-          <button onClick={onShowMenuClick}>Mostrar Menú</button>
+            <button onClick={onShowMenuClick}>Mostrar Menú</button>
           </div>
           <div className="recipe-grid">
             {currentRecipes.map((recipe) => (

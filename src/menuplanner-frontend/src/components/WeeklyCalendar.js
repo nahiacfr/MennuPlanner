@@ -1,37 +1,16 @@
+// src/components/WeeklyCalendar.js
 import React, { useState, useEffect } from 'react';
 import RecipeCard from './RecipeCards';  // Asegúrate de tener este componente
 import '../styles.css';
 
 const daysOfWeek = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
-const WeeklyCalendar = ({ token }) => {
-  const [favoriteRecipes, setFavoriteRecipes] = useState([]);
+const WeeklyCalendar = ({ token, favoriteRecipes, setFavoriteRecipes }) => {
   const [schedule, setSchedule] = useState(
     daysOfWeek.map(() => [null, null, null]) // Tres espacios por día
   );
 
-  // Obtener las recetas favoritas desde la API
-  useEffect(() => {
-    const fetchFavoriteRecipes = async () => {
-      const response = await fetch('http://localhost:5000/api/recipes', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setFavoriteRecipes(data);
-      } else {
-        console.error('Error al obtener recetas favoritas');
-      }
-    };
-
-    fetchFavoriteRecipes();
-  }, [token]);
-
-  // Función para guardar el menú semanal en la API
+  // Guardar el menú semanal en la API
   const saveMenu = async () => {
     const menu = daysOfWeek.map((day, dayIndex) => ({
       dia: day,
@@ -83,7 +62,7 @@ const WeeklyCalendar = ({ token }) => {
               key={index}
               recipe={recipe}
               draggable={true}
-              onDragStart={(e) => handleDragStart(e, recipe)}
+              onDragStart={(e) => handleDragStart(e, recipe)} // Aquí está el arrastre
             />
           ))}
         </div>
@@ -111,4 +90,5 @@ const WeeklyCalendar = ({ token }) => {
 };
 
 export default WeeklyCalendar;
+
 
