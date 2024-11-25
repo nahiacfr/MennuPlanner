@@ -124,7 +124,13 @@ const RecipeViewer = ({ availableRecipes, onAddRecipeClick, onShowMenuClick, onA
               <div className="recipe-grid">
                 {currentImportedRecipes.map((recipe) => (
                   <div key={recipe.id} onClick={() => handleRecipeClick(recipe)}>
-                    <RecipeCard recipe={recipe} />
+                    {/* Mostrar el nombre de la receta importada */}
+                    <RecipeCard 
+                      recipe={recipe} 
+                      title={recipe.title}  // Pasar el título de la receta a RecipeCard
+                    />
+                    {/* Alternativamente, si tienes un componente específico para mostrar el nombre, puedes hacerlo aquí */}
+                    <p>{recipe.title}</p>
                   </div>
                 ))}
               </div>
@@ -155,7 +161,3 @@ const RecipeViewer = ({ availableRecipes, onAddRecipeClick, onShowMenuClick, onA
 };
 
 export default RecipeViewer;
-
-
-
-
