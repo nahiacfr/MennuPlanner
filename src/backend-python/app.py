@@ -4,6 +4,8 @@ import jwt
 import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
+import mysql.connector
+import os
 # import mysql.connector  # Descomenta esto cuando uses MySQL
 
 app = Flask(__name__)
@@ -16,13 +18,13 @@ SECRET_KEY = 'mi_clave_secreta'
 usuarios = []
 recetas = []
 
-# Configuración de conexión a MySQL (comentada por ahora)
-# db_config = {
-#     'user': 'tu_usuario',  # Reemplaza con tu usuario de MySQL
-#     'password': 'tu_contraseña',  # Reemplaza con tu contraseña de MySQL
-#     'host': 'localhost',  # O la dirección de tu servidor MySQL
-#     'database': 'menuplanner'  # Reemplaza con tu nombre de base de datos
-# }
+# Configuración de conexión a MySQL
+db_config = {
+    'user': os.getenv('DB_USER', 'root'),
+    'password': os.getenv('DB_PASSWORD', 'password'),
+    'host': os.getenv('DB_HOST', 'localhost'),
+    'database': os.getenv('DB_NAME', 'menuplanner')
+}
 
 # Decorador para verificar tokens JWT
 def token_required(f):
@@ -51,39 +53,29 @@ def register_user():
     if not (nombre and correo and contrasena):
         return jsonify(error='Todos los campos son obligatorios'), 400
 
-    # Verificar si el correo ya está registrado (simulación)
-    for usuario in usuarios:
-        if usuario['correo'] == correo:
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+
+        # Verificar si el correo ya está registrado
+        cursor.execute("SELECT * FROM usuarios WHERE correo = %s", (correo,))
+        if cursor.fetchone():
             return jsonify(error='El correo ya está registrado'), 400
 
-    # Hash de la contraseña
-    hashed_password = generate_password_hash(contrasena)
-
-    # Insertar en MySQL (comentado por ahora)
-    # try:
-    #     conn = mysql.connector.connect(**db_config)
-    #     cursor = conn.cursor()
-    #     cursor.execute(
-    #         "INSERT INTO usuarios (nombre, correo, contrasena) VALUES (%s, %s, %s)",
-    #         (nombre, correo, hashed_password)
-    #     )
-    #     conn.commit()
-    #     cursor.close()
-    #     conn.close()
-    # except mysql.connector.Error as err:
-    #     return jsonify(error=str(err)), 500
-
-    # Agregar el usuario a la "base de datos" en memoria
-    nuevo_usuario = {
-        'nombre': nombre,
-        'correo': correo,
-        'contrasena': hashed_password  # Guardar el hash
-    }
-    usuarios.append(nuevo_usuario)
+        # Insertar el usuario
+        hashed_password = generate_password_hash(contrasena)
+        cursor.execute(
+            "INSERT INTO usuarios (nombre, correo, contrasena) VALUES (%s, %s, %s)",
+            (nombre, correo, hashed_password)
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except mysql.connector.Error as err:
+        return jsonify(error=f"Error en la base de datos: {err}"), 500
 
     return jsonify(message='Usuario registrado exitosamente'), 201
 
-# Ruta para iniciar sesión
 @app.route('/api/login', methods=['POST'])
 def login_user():
     data = request.get_json()
@@ -93,42 +85,37 @@ def login_user():
     if not (correo and contrasena):
         return jsonify(error='Correo y contraseña son obligatorios'), 400
 
-    # Verificar credenciales (simulación)
-    for usuario in usuarios:
-        if usuario['correo'] == correo and check_password_hash(usuario['contrasena'], contrasena):
-            # Generar un token de autenticación
-            token = jwt.encode(
-                {
-                    'correo': correo,
-                    'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1)
-                },
-                SECRET_KEY,
-                algorithm='HS256'
-            )
-            return jsonify(token=token), 200
+    try:
+        # Conectar a la base de datos
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
 
-    # Verificar credenciales con MySQL (comentado por ahora)
-    # try:
-    #     conn = mysql.connector.connect(**db_config)
-    #     cursor = conn.cursor(dictionary=True)
-    #     cursor.execute("SELECT * FROM usuarios WHERE correo = %s", (correo,))
-    #     user = cursor.fetchone()
-    #     cursor.close()
-    #     conn.close()
-    #     if user and check_password_hash(user['contrasena'], contrasena):
-    #         token = jwt.encode(
-    #             {
-    #                 'correo': correo,
-    #                 'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1)
-    #             },
-    #             SECRET_KEY,
-    #             algorithm='HS256'
-    #         )
-    #         return jsonify(token=token), 200
-    # except mysql.connector.Error as err:
-    #     return jsonify(error=str(err)), 500
+        # Buscar el usuario en la base de datos
+        cursor.execute("SELECT * FROM usuarios WHERE correo = %s", (correo,))
+        usuario = cursor.fetchone()
 
-    return jsonify(error='Correo o contraseña incorrectos'), 401
+        cursor.close()
+        conn.close()
+
+        # Si el usuario no existe o la contraseña no coincide
+        if not usuario or not check_password_hash(usuario['contrasena'], contrasena):
+            return jsonify(error='Correo o contraseña incorrectos'), 401
+
+        # Generar un token JWT
+        token = jwt.encode(
+            {
+                'correo': usuario['correo'],
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+            },
+            SECRET_KEY,
+            algorithm='HS256'
+        )
+
+        return jsonify(token=token), 200
+
+    except mysql.connector.Error as err:
+        return jsonify(error=f"Error en la base de datos: {err}"), 500
+
 
 # Ruta para agregar recetas
 @app.route('/api/recipes', methods=['POST'])
@@ -189,6 +176,23 @@ def get_recipes():
 
     # Devolver recetas de la "base de datos" en memoria
     return jsonify(recetas), 200
+
+@app.route('/api/weekly_menu', methods=['POST'])
+@token_required
+def save_weekly_menu():
+    data = request.get_json()
+    menu = data.get('menu')
+
+    if not menu:
+        return jsonify(error="El menú es obligatorio"), 400
+
+    # Aquí podrías validar la estructura del menú si es necesario
+
+    # Guardar en memoria (en MySQL deberías insertar o actualizar registros)
+    global menu_semanal
+    menu_semanal = menu
+
+    return jsonify(message="Menú semanal guardado exitosamente"), 201
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

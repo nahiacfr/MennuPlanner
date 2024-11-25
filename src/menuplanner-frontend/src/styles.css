@@ -461,5 +461,38 @@
 .favorites-container {
   margin-top: 10px;
 }
+/* Estilo para el mensaje de éxito */
+.alert {
+  background-color: #4caf50;
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  text-align: center;
+  margin-top: 10px;
+}
+
+
+.navbar ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.navbar li {
+  display: inline;
+  margin: 0 10px;
+}
+
+.navbar button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.navbar button:hover {
+  background-color: #45a049;
+}
+
 
   

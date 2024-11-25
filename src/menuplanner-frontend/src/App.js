@@ -16,6 +16,7 @@ function App() {
   const [token, setToken] = useState(null);
   const [showAddRecipeForm, setShowAddRecipeForm] = useState(false); // Estado para controlar si se muestra el formulario
   const [showMenu, setShowMenu] = useState(false); // Estado para mostrar el menú semanal
+  const [activeSection, setActiveSection] = useState('user'); // Estado para gestionar la sección activa
 
   // Función para manejar el login
   const handleLogin = async (token) => {
@@ -41,12 +42,17 @@ function App() {
 
   // Función para mostrar el menú semanal
   const showWeeklyMenu = () => {
-    setShowMenu(true); // Cambiar el estado para mostrar el menú
+    setActiveSection('menu');
   };
 
   // Función para agregar receta a favoritos
   const addToFavorites = (recipe) => {
     setFavoriteRecipes((prevFavorites) => [...prevFavorites, recipe]);
+  };
+
+  // Función para manejar la selección de sección en Navbar
+  const handleSectionChange = (section) => {
+    setActiveSection(section);
   };
 
   return (
@@ -66,26 +72,26 @@ function App() {
       ) : (
         <>
           {showAddRecipeForm ? (
-            // Mostrar el formulario de añadir receta
             <AñadirReceta 
               onAddRecipe={addNewRecipe} 
               onCancel={() => setShowAddRecipeForm(false)} 
             />
-          ) : showMenu ? (
-            // Mostrar el menú semanal
+          ) : activeSection === 'menu' ? (
             <WeeklyCalendar 
               token={token} 
               favoriteRecipes={favoriteRecipes} 
-              setFavoriteRecipes={setFavoriteRecipes} 
+              setFavoriteRecipes={setFavoriteRecipes}
+              onBackToRecipes={() => setActiveSection('user')} // Volver a la vista de recetas
             />
           ) : (
             <>
-              <h2>Recetas Disponibles</h2>
               <RecipeViewer 
                 availableRecipes={recipes} 
-                onAddRecipeClick={() => setShowAddRecipeForm(true)}  // Mostrar el formulario de añadir receta
-                onShowMenuClick={showWeeklyMenu}  // Aquí se pasa la función para mostrar el menú
-                onAddToFavorites={addToFavorites} // Pasar la función para añadir a favoritos
+                onAddRecipeClick={() => setShowAddRecipeForm(true)}  
+                onShowMenuClick={showWeeklyMenu}  
+                onAddToFavorites={addToFavorites}
+                activeSection={activeSection} // Pasar la sección activa a RecipeViewer
+                onSectionChange={handleSectionChange} // Función para manejar el cambio de sección
               />
             </>
           )}
@@ -96,3 +102,4 @@ function App() {
 }
 
 export default App;
+

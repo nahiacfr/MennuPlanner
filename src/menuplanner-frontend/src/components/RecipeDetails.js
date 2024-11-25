@@ -1,7 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react'; // Importamos useState
 import '../styles.css';
 
 const RecipeDetails = ({ recipe, onAddToFavorites, onEdit }) => {
+  // Estado para mostrar el mensaje de éxito
+  const [favoriteMessage, setFavoriteMessage] = useState('');
+
+  // Función para manejar el clic en el botón "Añadir a Fav"
+  const handleAddToFavorites = () => {
+    // Llamamos a la función pasada como prop (onAddToFavorites)
+    onAddToFavorites();
+
+    // Mostramos el mensaje de éxito
+    setFavoriteMessage('¡Receta añadida a favoritos!');
+
+    // Ocultamos el mensaje después de 3 segundos
+    setTimeout(() => {
+      setFavoriteMessage('');
+    }, 3000);
+  };
+
   return (
     <div className="recipe-details">
       <h2>{recipe.name}</h2>
@@ -24,8 +41,15 @@ const RecipeDetails = ({ recipe, onAddToFavorites, onEdit }) => {
           ))}
         </ol>
       </div>
+
+      {/* Mostrar el mensaje de éxito si está presente */}
+      {favoriteMessage && (
+        <div className="alert">{favoriteMessage}</div>
+      )}
+
       <div className="recipe-buttons">
-        <button onClick={onAddToFavorites}>Añadir a Fav</button>
+        {/* Usamos la función handleAddToFavorites para el clic en "Añadir a Fav" */}
+        <button onClick={handleAddToFavorites}>Añadir a Fav</button>
         <button onClick={onEdit}>Editar</button>
       </div>
     </div>

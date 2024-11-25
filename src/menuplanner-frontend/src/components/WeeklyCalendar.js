@@ -1,37 +1,16 @@
 // src/components/WeeklyCalendar.js
 import React, { useState, useEffect } from 'react';
-import RecipeCard from './RecipeCards';  // Asegúrate de tener este componente
+import RecipeCard from './RecipeCards'; // Asegúrate de tener este componente
 import '../styles.css';
 
 const daysOfWeek = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
-const WeeklyCalendar = ({ token, favoriteRecipes, setFavoriteRecipes }) => {
+const WeeklyCalendar = ({ token, favoriteRecipes, setFavoriteRecipes, onBackToRecipes }) => {
   const [schedule, setSchedule] = useState(
     daysOfWeek.map(() => [null, null, null]) // Tres espacios por día
   );
 
-  // Guardar el menú semanal en la API
-  const saveMenu = async () => {
-    const menu = daysOfWeek.map((day, dayIndex) => ({
-      dia: day,
-      recetas: schedule[dayIndex].filter(slot => slot !== null).map(recipe => recipe.id),
-    }));
 
-    const response = await fetch('http://localhost:5000/api/weekly_menu', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({ menu }),
-    });
-
-    if (response.ok) {
-      console.log('Menú semanal actualizado');
-    } else {
-      console.error('Error al actualizar el menú semanal');
-    }
-  };
 
   // Manejar el inicio del arrastre de recetas
   const handleDragStart = (e, recipe) => {
@@ -45,7 +24,6 @@ const WeeklyCalendar = ({ token, favoriteRecipes, setFavoriteRecipes }) => {
     const newSchedule = [...schedule];
     newSchedule[dayIndex][slotIndex] = recipe;
     setSchedule(newSchedule);
-    saveMenu();  // Guardar los cambios en el menú
   };
 
   const handleDragOver = (e) => {
@@ -54,6 +32,13 @@ const WeeklyCalendar = ({ token, favoriteRecipes, setFavoriteRecipes }) => {
 
   return (
     <div className="weekly-calendar">
+      <div className="header">
+        <h2>Planificador Semanal</h2>
+        <button onClick={onBackToRecipes} className="back-button">
+          Volver a Recetas
+        </button>
+      </div>
+
       <div className="favorites-bar">
         <h3>Recetas Favoritas</h3>
         <div className="favorites-container">
@@ -90,5 +75,6 @@ const WeeklyCalendar = ({ token, favoriteRecipes, setFavoriteRecipes }) => {
 };
 
 export default WeeklyCalendar;
+
 
 
