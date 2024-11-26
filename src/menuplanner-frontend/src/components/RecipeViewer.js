@@ -13,7 +13,12 @@ const RecipeViewer = ({ availableRecipes, onAddRecipeClick, onShowMenuClick, onA
   const [importedRecipesFromApi, setImportedRecipesFromApi] = useState([]);
   const recipesPerPage = 4;
 
-  const userCreatedRecipes = availableRecipes.filter(recipe => recipe.isUserCreated);
+  const userCreatedRecipes = availableRecipes
+  .filter(recipe => recipe.isUserCreated)
+  .map(recipe => ({
+    ...recipe,
+      title: recipe.title, // Asignar el nombre al campo `title` para unificar
+  }));
   const importedRecipes = availableRecipes.filter(recipe => recipe.isImported);
 
   // Clave
@@ -126,11 +131,8 @@ const RecipeViewer = ({ availableRecipes, onAddRecipeClick, onShowMenuClick, onA
                   <div key={recipe.id} onClick={() => handleRecipeClick(recipe)}>
                     {/* Mostrar el nombre de la receta importada */}
                     <RecipeCard 
-                      recipe={recipe} 
-                      title={recipe.title}  // Pasar el título de la receta a RecipeCard
+                    recipe={recipe} 
                     />
-                    {/* Alternativamente, si tienes un componente específico para mostrar el nombre, puedes hacerlo aquí */}
-                    <p>{recipe.title}</p>
                   </div>
                 ))}
               </div>

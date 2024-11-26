@@ -41,8 +41,20 @@ export const getRecipes = async (token) => {
     throw new Error('Error al obtener recetas');
   }
 
-  return response.json();
+  const recipes = await response.json();
+  
+  // Mapeamos las claves en español a las claves en inglés
+  return recipes.map((recipe) => ({
+    ...recipe,
+    title: recipe.nombre,
+    ingredients: recipe.ingredientes,
+    instructions: recipe.instrucciones,
+    preparationTime: recipe.tiempo_preparacion,
+    imageUrl: recipe.imagen_url,
+    isUserCreated: true, // Todas las recetas del backend se consideran creadas por el usuario
+  }));
 };
+
 
 // Obtener el menú semanal desde la API
 export const getWeeklyMenu = async (token) => {

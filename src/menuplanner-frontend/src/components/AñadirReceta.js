@@ -1,53 +1,30 @@
 import React, { useState } from 'react';
 
 const AñadirReceta = ({ onAddRecipe, onCancel }) => {
-  const [name, setName] = useState('');
-  const [ingredients, setIngredients] = useState('');
-  const [instructions, setInstructions] = useState('');
-  const [time, setTime] = useState('');
-  const [image, setImage] = useState(null); // Estado para la imagen
+  const [nombre, setNombre] = useState('');
+  const [ingredientes, setIngredientes] = useState('');
+  const [instrucciones, setInstrucciones] = useState('');
+  const [tiempoPreparacion, setTiempoPreparacion] = useState('');
+  const [imagenUrl, setImagenUrl] = useState(''); // Estado para la URL de la imagen
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImage(file); // Guardamos el archivo de la imagen en lugar de su URL
-    }
+  const handleImageUrlChange = (e) => {
+    setImagenUrl(e.target.value); // Guardamos la URL ingresada
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Subir la imagen al servidor si existe
-    let imageUrl = '';
-    if (image) {
-      const formData = new FormData();
-      formData.append('image', image);
-
-      const response = await fetch('http://localhost:5000/api/upload_image', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        imageUrl = data.imageUrl; // Obtener la URL de la imagen subida
-      } else {
-        alert('Error al subir la imagen');
-        return;
-      }
-    }
-
     // Crear el objeto de receta
     const newRecipe = {
-      name,
-      ingredients: ingredients.split(','), // Separar ingredientes por comas
-      instructions: instructions.split('.'), // Separar instrucciones por puntos
-      time_preparation: time,
-      imagen_url: imageUrl, // URL de la imagen, si se subió correctamente
+      nombre,
+      ingredientes, // Texto plano separado por comas
+      instrucciones, // Texto plano separado por puntos
+      tiempo_preparacion: tiempoPreparacion,
+      imagen_url: imagenUrl, // URL de la imagen ingresada por el usuario
     };
 
     // Enviar la receta al backend
-    const response = await fetch('http://localhost:5000/api/recipes', {
+    const response = await fetch('http://localhost:5000/api/recipes/add', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newRecipe),
@@ -68,51 +45,53 @@ const AñadirReceta = ({ onAddRecipe, onCancel }) => {
       <form onSubmit={handleSubmit}>
         <div>
           <label>Nombre:</label>
-          <input 
-            type="text" 
-            value={name} 
-            onChange={(e) => setName(e.target.value)} 
-            required 
+          <input
+            type="text"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            required
           />
         </div>
         <div>
           <label>Ingredientes (separados por comas):</label>
-          <input 
-            type="text" 
-            value={ingredients} 
-            onChange={(e) => setIngredients(e.target.value)} 
-            required 
+          <input
+            type="text"
+            value={ingredientes}
+            onChange={(e) => setIngredientes(e.target.value)}
+            required
           />
         </div>
         <div>
           <label>Instrucciones (separadas por puntos):</label>
-          <textarea 
-            value={instructions} 
-            onChange={(e) => setInstructions(e.target.value)} 
-            required 
+          <textarea
+            value={instrucciones}
+            onChange={(e) => setInstrucciones(e.target.value)}
+            required
           />
         </div>
         <div>
           <label>Tiempo de preparación:</label>
-          <input 
-            type="text" 
-            value={time} 
-            onChange={(e) => setTime(e.target.value)} 
-            required 
+          <input
+            type="text"
+            value={tiempoPreparacion}
+            onChange={(e) => setTiempoPreparacion(e.target.value)}
+            required
           />
         </div>
         <div>
-          <label>Imagen de la receta:</label>
-          <input 
-            type="file" 
-            accept="image/*" 
-            onChange={handleImageChange} 
+          <label>URL de la imagen:</label>
+          <input
+            type="url"
+            value={imagenUrl}
+            onChange={handleImageUrlChange}
+            placeholder="Introduce la URL de la imagen"
+            required
           />
         </div>
-        {image && (
+        {imagenUrl && (
           <div className="image-preview">
             <h4>Vista previa de la imagen:</h4>
-            <img src={URL.createObjectURL(image)} alt="Vista previa de la receta" style={{ maxWidth: '200px' }} />
+            <img src={imagenUrl} alt="Vista previa de la receta" style={{ maxWidth: '200px' }} />
           </div>
         )}
         <button type="submit">Guardar Receta</button>

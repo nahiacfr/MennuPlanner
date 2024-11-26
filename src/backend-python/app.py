@@ -10,11 +10,16 @@ CORS(app)
 # Configuración de conexión a MySQL
 db_config = {
     'user': os.getenv('DB_USER', 'root'),
-    'password': os.getenv('DB_PASSWORD', 'password'),
+   'password': os.getenv('DB_PASSWORD', 'password'),
     'host': os.getenv('DB_HOST', 'localhost'),
     'database': os.getenv('DB_NAME', 'menuplanner')
 }
-
+#db_config = {
+#    'user': 'root',
+#    'password': '1234',
+#    'host': 'localhost',
+#    'database': 'menuplanner'
+#}
 # Configuración para subir archivos
 UPLOAD_FOLDER = 'uploads/'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -87,57 +92,86 @@ def register_user():
         return jsonify(error=f"Error en la base de datos: {err}"), 500
 
     return jsonify(message='Usuario registrado exitosamente'), 201
+    
+# Ruta para agregar recetas importadas
+@app.route('/api/recipes/imported/add', methods=['POST'])
+def add_imported_recipe():
+    data = request.json
+    print("Datos recibidos:", data)  # Añade un log para ver los datos
+
+    nombre = data.get('name')
+    ingredientes = ', '.join(data.get('ingredients', []))  # Ingredientes separados por comas
+    instrucciones = '. '.join(data.get('instructions', []))  # Instrucciones separadas por punto
+    tiempo_preparacion = '00'  # Tiempo de preparación no definido
+    imagen_url = data.get('imageUrl')
+
+    if not (nombre and ingredientes and instrucciones):
+        return jsonify(error='Todos los campos son obligatorios'), 400
+
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        # Insertar la receta importada
+        cursor.execute(
+            """
+            INSERT INTO recetas (nombre, ingredientes, instrucciones, tiempo_preparacion, imagen_url)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (nombre, ingredientes, instrucciones, tiempo_preparacion, imagen_url)
+        )
+        conn.commit()
+
+        # Obtener la receta recién creada
+        receta_id = cursor.lastrowid
+        cursor.execute("SELECT * FROM recetas WHERE id = %s", (receta_id,))
+        nueva_receta = cursor.fetchone()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify(nueva_receta), 201
+
+    except mysql.connector.Error as err:
+        return jsonify(error=str(err)), 500
 
 # Ruta para agregar recetas
-@app.route('/api/recipes', methods=['POST'])
+@app.route('/api/recipes/add', methods=['POST'])
 def add_recipe():
-    data = request.form
+    data = request.json
     nombre = data.get('nombre')
     ingredientes = data.get('ingredientes')
     instrucciones = data.get('instrucciones')
     tiempo_preparacion = data.get('tiempo_preparacion')
-
-    # Verificar si se cargó una imagen
-    imagen = request.files.get('imagen')
-    if imagen and allowed_file(imagen.filename):
-        imagen_filename = secure_filename(imagen.filename)
-        imagen_path = os.path.join(app.config['UPLOAD_FOLDER'], imagen_filename)
-        imagen.save(imagen_path)
-        imagen_url = f"http://localhost:5000/uploads/{imagen_filename}"  # URL accesible de la imagen
-    else:
-        imagen_url = None
+    imagen_url = data.get('imagen_url')
 
     if not (nombre and ingredientes and instrucciones and tiempo_preparacion):
         return jsonify(error='Todos los campos son obligatorios'), 400
 
     try:
         conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
 
-        # Insertar la receta en MySQL
+        # Insertar la receta
         cursor.execute(
-            "INSERT INTO recetas (nombre, ingredientes, instrucciones, tiempo_preparacion, imagen_url) VALUES (%s, %s, %s, %s, %s)",
+            """
+            INSERT INTO recetas (nombre, ingredientes, instrucciones, tiempo_preparacion, imagen_url)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
             (nombre, ingredientes, instrucciones, tiempo_preparacion, imagen_url)
         )
         conn.commit()
+
+        # Obtener la receta recién creada
+        receta_id = cursor.lastrowid
+        cursor.execute("SELECT * FROM recetas WHERE id = %s", (receta_id,))
+        nueva_receta = cursor.fetchone()
+
         cursor.close()
         conn.close()
-    except mysql.connector.Error as err:
-        return jsonify(error=str(err)), 500
 
-    return jsonify(message='Receta añadida exitosamente'), 201
+        return jsonify(nueva_receta), 201
 
-# Ruta para obtener recetas
-@app.route('/api/recipes', methods=['GET'])
-def get_recipes():
-    try:
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM recetas")
-        recetas_db = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        return jsonify(recetas_db), 200
     except mysql.connector.Error as err:
         return jsonify(error=str(err)), 500
 
@@ -146,8 +180,42 @@ def get_recipes():
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+# Ruta para subir imágenes
+@app.route('/api/upload_image', methods=['POST'])
+def upload_image():
+    if 'image' not in request.files:
+        return jsonify(error='No se proporcionó ninguna imagen'), 400
+    
+    imagen = request.files['image']
+    if imagen and allowed_file(imagen.filename):
+        imagen_filename = secure_filename(imagen.filename)
+        imagen_path = os.path.join(app.config['UPLOAD_FOLDER'], imagen_filename)
+        imagen.save(imagen_path)
+        return jsonify(imageUrl=f"http://localhost:5000/uploads/{imagen_filename}"), 201
+    else:
+        return jsonify(error='Archivo no permitido'), 400
+
+# Ruta para obtener todas las recetas
+@app.route('/api/recipes', methods=['GET'])
+def get_recipes():
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        # Consulta para obtener todas las recetas
+        cursor.execute("SELECT * FROM recetas")
+        recetas_db = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify(recetas_db), 200
+    except mysql.connector.Error as err:
+        return jsonify(error=str(err)), 500
+        
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
+
 
 
 

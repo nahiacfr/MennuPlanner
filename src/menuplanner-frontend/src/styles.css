@@ -493,6 +493,11 @@
 .navbar button:hover {
   background-color: #45a049;
 }
-
+.recipe-card h4 {
+  white-space: nowrap; /* Evitar que el texto haga salto de línea */
+  overflow: hidden; /* Ocultar texto que desborda */
+  text-overflow: ellipsis; /* Mostrar "..." para texto largo */
+  max-width: 200px; /* Ajusta el ancho según tu diseño */
+}
 
   

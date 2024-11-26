@@ -3,8 +3,8 @@ import './styles.css';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 import RecipeViewer from './components/RecipeViewer';
-import AñadirReceta from './components/AñadirReceta';  // Importar AñadirReceta
-import WeeklyCalendar from './components/WeeklyCalendar';  // Importar el componente de menú semanal
+import AñadirReceta from './components/AñadirReceta'; // Importar AñadirReceta
+import WeeklyCalendar from './components/WeeklyCalendar'; // Importar el componente de menú semanal
 import { getRecipes } from './api';
 
 function App() {
@@ -14,13 +14,16 @@ function App() {
   const [favoriteRecipes, setFavoriteRecipes] = useState([]); // Estado para manejar las recetas favoritas
   const [showAddRecipeForm, setShowAddRecipeForm] = useState(false); // Estado para controlar si se muestra el formulario
   const [activeSection, setActiveSection] = useState('user'); // Estado para gestionar la sección activa
+  const [userToken, setUserToken] = useState(''); // Estado para almacenar el token del usuario
 
   // Función para manejar el login
-  const handleLogin = async () => {
+  const handleLogin = async (token) => {
+    setUserToken(token); // Almacenar el token en el estado
+    localStorage.setItem('userToken', token); // Guardar el token en localStorage
     setIsLoggedIn(true);
     try {
-      const recipes = await getRecipes(); // Llamar a la función para obtener recetas sin token
-      setRecipes(recipes);
+      const recipes = await getRecipes(token); // Pasar el token de usuario
+      setRecipes(recipes); // Guardar las recetas en el estado
     } catch (err) {
       console.error('Error al obtener recetas:', err.message);
       alert('Error al obtener las recetas. Intenta nuevamente.');
@@ -31,11 +34,21 @@ function App() {
   const handleSwitchToRegister = () => setShowLogin(false);
   const handleSwitchToLogin = () => setShowLogin(true);
 
-  // Función para agregar una nueva receta
-  const addNewRecipe = (newRecipe) => {
-    setRecipes((prevRecipes) => [...prevRecipes, newRecipe]);
+
+// Función para agregar una nueva receta
+const addNewRecipe = async (newRecipe) => {
+  try {
+    setRecipes((prevRecipes) => [...prevRecipes, newRecipe]); // Añadir la receta localmente
     setShowAddRecipeForm(false); // Cerrar el formulario después de añadir la receta
-  };
+
+    // Actualizar la lista de recetas desde el servidor
+    const updatedRecipes = await getRecipes(userToken); // Pasar el token del usuario
+    setRecipes(updatedRecipes); // Actualizar el estado con las recetas del servidor
+  } catch (err) {
+    console.error('Error al actualizar las recetas:', err.message);
+    alert('Error al actualizar la lista de recetas. Intenta nuevamente.');
+  }
+};
 
   // Función para agregar receta a favoritos
   const addToFavorites = (recipe) => {
@@ -80,16 +93,14 @@ function App() {
               onBackToRecipes={() => setActiveSection('user')} // Volver a la vista de recetas
             />
           ) : (
-            <>
-              <RecipeViewer 
-                availableRecipes={recipes} 
-                onAddRecipeClick={() => setShowAddRecipeForm(true)}  
-                onShowMenuClick={showWeeklyMenu}  
-                onAddToFavorites={addToFavorites}
-                activeSection={activeSection} // Pasar la sección activa a RecipeViewer
-                onSectionChange={handleSectionChange} // Función para manejar el cambio de sección
-              />
-            </>
+            <RecipeViewer 
+              availableRecipes={recipes} 
+              onAddRecipeClick={() => setShowAddRecipeForm(true)}  
+              onShowMenuClick={showWeeklyMenu}  
+              onAddToFavorites={addToFavorites}
+              activeSection={activeSection} // Pasar la sección activa a RecipeViewer
+              onSectionChange={handleSectionChange} // Función para manejar el cambio de sección
+            />
           )}
         </>
       )}
@@ -98,5 +109,3 @@ function App() {
 }
 
 export default App;
-
-
