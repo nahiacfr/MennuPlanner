@@ -5,7 +5,7 @@ import RegisterForm from './components/RegisterForm';
 import RecipeViewer from './components/RecipeViewer';
 import AñadirReceta from './components/AñadirReceta'; // Importar AñadirReceta
 import WeeklyCalendar from './components/WeeklyCalendar'; // Importar el componente de menú semanal
-import { getRecipes } from './api';
+import { getRecipes, getUserEmail } from './api'; // Importar getUserEmail
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -34,25 +34,65 @@ function App() {
   const handleSwitchToRegister = () => setShowLogin(false);
   const handleSwitchToLogin = () => setShowLogin(true);
 
+  // Función para agregar una nueva receta
+  const addNewRecipe = async (newRecipe) => {
+    try {
+      setRecipes((prevRecipes) => [...prevRecipes, newRecipe]); // Añadir la receta localmente
+      setShowAddRecipeForm(false); // Cerrar el formulario después de añadir la receta
 
-// Función para agregar una nueva receta
-const addNewRecipe = async (newRecipe) => {
-  try {
-    setRecipes((prevRecipes) => [...prevRecipes, newRecipe]); // Añadir la receta localmente
-    setShowAddRecipeForm(false); // Cerrar el formulario después de añadir la receta
-
-    // Actualizar la lista de recetas desde el servidor
-    const updatedRecipes = await getRecipes(userToken); // Pasar el token del usuario
-    setRecipes(updatedRecipes); // Actualizar el estado con las recetas del servidor
-  } catch (err) {
-    console.error('Error al actualizar las recetas:', err.message);
-    alert('Error al actualizar la lista de recetas. Intenta nuevamente.');
-  }
-};
+      // Actualizar la lista de recetas desde el servidor
+      const updatedRecipes = await getRecipes(userToken); // Pasar el token del usuario
+      setRecipes(updatedRecipes); // Actualizar el estado con las recetas del servidor
+    } catch (err) {
+      console.error('Error al actualizar las recetas:', err.message);
+      alert('Error al actualizar la lista de recetas. Intenta nuevamente.');
+    }
+  };
 
   // Función para agregar receta a favoritos
-  const addToFavorites = (recipe) => {
-    setFavoriteRecipes((prevFavorites) => [...prevFavorites, recipe]);
+  const addToFavorites = async (recipe) => {
+    try {
+      const userEmail = getUserEmail(); // Obtener el correo del usuario
+      const imageUrl = recipe.imageUrl || recipe.image;
+      if (!userEmail) {
+        throw new Error('No se ha encontrado el correo del usuario. Inicia sesión nuevamente.');
+      }
+
+      // Enviar la solicitud al backend
+      const response = await fetch('http://localhost:3002/api/favorites', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userEmail, // Email del usuario
+          recipeTitle: recipe.title, // Título de la receta
+          imageUrl: imageUrl,
+        }),
+      });
+
+      // Validar respuesta del backend
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error en la respuesta del servidor:', errorData);
+        alert(`Error: ${errorData.error || 'No se pudo agregar la receta a favoritos.'}`);
+        return;
+      }
+
+      // Actualizar el estado local
+      setFavoriteRecipes((prevFavorites) => {
+        // Evitar duplicados en el estado local
+        if (prevFavorites.some((fav) => fav.title === recipe.title)) {
+          return prevFavorites;
+        }
+        return [...prevFavorites, recipe];
+      });
+
+      console.log('Receta añadida a favoritos:', recipe);
+    } catch (err) {
+      console.error('Error al agregar a favoritos:', err.message);
+      alert('Error al agregar la receta a favoritos. Intenta nuevamente.');
+    }
   };
 
   // Función para manejar el cambio de sección en Navbar

@@ -1,5 +1,7 @@
 const API_URL = 'http://localhost:5000/api';
+let userEmail = null; // Variable global para almacenar el correo del usuario
 
+export const getUserEmail = () => userEmail; // Función para obtener el correo del usuario
 // Exportar las funciones de forma nombrada
 export const register = async (nombre, correo, contrasena) => {
   const response = await fetch(`${API_URL}/register`, {
@@ -15,6 +17,7 @@ export const register = async (nombre, correo, contrasena) => {
   return response.json();
 };
 
+
 export const login = async (correo, contrasena) => {
   const response = await fetch(`${API_URL}/login`, {
     method: 'POST',
@@ -26,7 +29,9 @@ export const login = async (correo, contrasena) => {
     throw new Error((await response.json()).error || 'Error al iniciar sesión');
   }
 
-  return response.json();
+  const data = await response.json();
+  userEmail = correo; // Guardar el correo en la variable global
+  return data;
 };
 
 export const getRecipes = async (token) => {
@@ -56,36 +61,4 @@ export const getRecipes = async (token) => {
 };
 
 
-// Obtener el menú semanal desde la API
-export const getWeeklyMenu = async (token) => {
-  const response = await fetch(`${API_URL}/weekly_menu`, {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${token}`, // Token JWT en el encabezado
-    },
-  });
 
-  if (!response.ok) {
-    throw new Error('Error al obtener el menú semanal');
-  }
-
-  return response.json();
-};
-
-// Guardar el menú semanal en la API
-export const saveWeeklyMenu = async (menu, token) => {
-  const response = await fetch(`${API_URL}/weekly_menu`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ menu }),
-  });
-
-  if (!response.ok) {
-    throw new Error('Error al guardar el menú semanal');
-  }
-
-  return response.json();
-};
