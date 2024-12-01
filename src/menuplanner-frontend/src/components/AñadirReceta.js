@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-
+import { getUserId } from '../api'; 
 const AñadirReceta = ({ onAddRecipe, onCancel }) => {
   const [nombre, setNombre] = useState('');
   const [ingredientes, setIngredientes] = useState('');
@@ -14,29 +14,30 @@ const AñadirReceta = ({ onAddRecipe, onCancel }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Crear el objeto de receta
-    const newRecipe = {
-      nombre,
-      ingredientes, // Texto plano separado por comas
-      instrucciones, // Texto plano separado por puntos
-      tiempo_preparacion: tiempoPreparacion,
-      imagen_url: imagenUrl, // URL de la imagen ingresada por el usuario
-    };
+// Crear el objeto de receta
+const newRecipe = {
+  nombre,
+  ingredientes, // Texto plano separado por comas
+  instrucciones, // Texto plano separado por puntos
+  tiempo_preparacion: tiempoPreparacion,
+  imagen_url: imagenUrl, // URL de la imagen ingresada por el usuario
+  userId: getUserId(), // Incluye el userId en el objeto de receta
+};
 
-    // Enviar la receta al backend
-    const response = await fetch('http://localhost:5000/api/recipes/add', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newRecipe),
-    });
+// Enviar la receta al backend
+const response = await fetch('http://localhost:5000/api/recipes/add', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(newRecipe),
+});
 
-    if (response.ok) {
-      onAddRecipe(newRecipe); // Agregar la receta a la lista de recetas
-      onCancel(); // Cerrar el formulario
-    } else {
-      const error = await response.json();
-      alert(`Error: ${error.error}`);
-    }
+if (response.ok) {
+  onAddRecipe(newRecipe); // Agregar la receta a la lista de recetas
+  onCancel(); // Cerrar el formulario
+} else {
+  const error = await response.json();
+  alert(`Error: ${error.error}`);
+}
   };
 
   return (

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import '../styles.css';
+import { getUserId } from '../api'; 
 
 const RecipeDetails = ({ recipe, onAddToFavorites, onEdit, onAddToMyRecipes }) => {
   const [favoriteMessage, setFavoriteMessage] = useState('');
@@ -18,8 +19,9 @@ const RecipeDetails = ({ recipe, onAddToFavorites, onEdit, onAddToMyRecipes }) =
       ingredients: recipe.extendedIngredients.map((ingredient) => ingredient.original),  
       instructions: recipe.instructions.split('.').map((instruction) => instruction.trim()).filter((instruction) => instruction.length > 0),  
       imageUrl: recipe.image || 'https://via.placeholder.com/150',  
+      userId: getUserId(),  // Incluye el userId en el cuerpo de la solicitud
     };
-    
+  
     console.log('Receta importada:', importedRecipe);  // Verifica que los datos estén correctos
   
     try {
@@ -39,6 +41,7 @@ const RecipeDetails = ({ recipe, onAddToFavorites, onEdit, onAddToMyRecipes }) =
       console.error(error);
     }
   };
+  
   
 
   const ingredientsList = recipe.isUserCreated

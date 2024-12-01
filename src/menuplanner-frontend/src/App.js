@@ -5,7 +5,7 @@ import RegisterForm from './components/RegisterForm';
 import RecipeViewer from './components/RecipeViewer';
 import AñadirReceta from './components/AñadirReceta'; // Importar AñadirReceta
 import WeeklyCalendar from './components/WeeklyCalendar'; // Importar el componente de menú semanal
-import { getRecipes, getUserEmail } from './api'; // Importar getUserEmail
+import { getRecipes, getUserEmail, getUserId } from './api'; // Importar getUserEmail y getUserId
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -37,6 +37,11 @@ function App() {
   // Función para agregar una nueva receta
   const addNewRecipe = async (newRecipe) => {
     try {
+      const userId = getUserId(); // Obtener el ID del usuario
+      if (!userId) {
+        throw new Error('No se ha encontrado el ID del usuario. Inicia sesión nuevamente.');
+      }
+
       setRecipes((prevRecipes) => [...prevRecipes, newRecipe]); // Añadir la receta localmente
       setShowAddRecipeForm(false); // Cerrar el formulario después de añadir la receta
 
@@ -52,11 +57,12 @@ function App() {
   // Función para agregar receta a favoritos
   const addToFavorites = async (recipe) => {
     try {
-      const userEmail = getUserEmail(); // Obtener el correo del usuario
-      const imageUrl = recipe.imageUrl || recipe.image;
-      if (!userEmail) {
-        throw new Error('No se ha encontrado el correo del usuario. Inicia sesión nuevamente.');
+      const userId = getUserId(); // Obtener el ID del usuario
+      if (!userId) {
+        throw new Error('No se ha encontrado el ID del usuario. Inicia sesión nuevamente.');
       }
+
+      const imageUrl = recipe.imageUrl || recipe.image;
 
       // Enviar la solicitud al backend
       const response = await fetch('http://localhost:3002/api/favorites', {
@@ -65,9 +71,9 @@ function App() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: userEmail, // Email del usuario
+          userId, // ID del usuario
           recipeTitle: recipe.title, // Título de la receta
-          imageUrl: imageUrl,
+          recipeImageUrl: imageUrl,
         }),
       });
 
