@@ -18,11 +18,12 @@ const RecipeCard = ({ recipe, draggable, onDragStart }) => {
         className="recipe-image"
         onError={(e) => e.target.src = 'https://via.placeholder.com/150'} // Si no carga, mostrar imagen predeterminada
       />
-      <p>{recipe.title}</p>
+      <p>{recipe.title}</p> {/* Mostrar el título de la receta */}
     </div>
   );
 };
 
 export default RecipeCard;
+
 
 

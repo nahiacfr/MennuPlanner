@@ -1,96 +1,94 @@
-// src/components/WeeklyCalendar.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import RecipeCard from './RecipeCards'; // Asegúrate de tener este componente
 import '../styles.css';
-import { getUserEmail } from '../api';
+import { getUserEmail } from '../api'; // Importamos la función
 
 const daysOfWeek = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
-const WeeklyCalendar = ({ userEmail, onBackToRecipes }) => { 
-  const [favoriteRecipes, setFavoriteRecipes] = useState([]); // Recetas favoritas
-  const [schedule, setSchedule] = useState(
-    daysOfWeek.map(() => [null, null, null]) // Tres espacios por día para montar el horario
-  );
+const WeeklyCalendar = ({ onBackToRecipes }) => {
+  const [favoriteRecipes, setFavoriteRecipes] = useState([]); // Estado para las recetas favoritas
+  const [schedule, setSchedule] = useState(daysOfWeek.map(() => [null, null, null])); // Calendario semanal
+  const [userEmail, setUserEmail] = useState(null); // Estado para el correo del usuario
+  const [loading, setLoading] = useState(true); // Estado de carga
+  const [error, setError] = useState(null); // Estado de error
 
-  // Función para obtener las recetas favoritas
-  const getFavoriteRecipes = async () => {
+  // Obtener recetas favoritas desde la API
+  const getFavoriteRecipes = useCallback(async () => {
+    if (!userEmail) {
+      console.error('No se ha encontrado el correo del usuario');
+      setError('No se ha encontrado el correo del usuario.');
+      return;
+    }
+
     try {
-      const userEmail = getUserEmail(); // Obtener el correo del usuario
-      if (!userEmail) {
-        throw new Error('No se ha encontrado el correo del usuario. Inicia sesión nuevamente.');
-      }
+      console.log('Iniciando la llamada a la API para obtener las recetas favoritas...');
 
-      // Enviar la solicitud al backend
-      const response = await fetch(`http://localhost:3002/api/favorites?userId=${userEmail}`, {
+      const response = await fetch(`http://localhost:3002/api/favorites?email=${userEmail}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
 
-      // Validar respuesta del backend
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Error en la respuesta del servidor:', errorData);
-        alert(`Error: ${errorData.error || 'No se pudieron obtener las recetas favoritas.'}`);
+        console.error('Error en la respuesta del backend', response.status);
+        setError('Error en la respuesta del servidor.');
         return;
       }
 
-      // Obtener las recetas favoritas desde la respuesta
       const favoriteRecipes = await response.json();
+      console.log('Respuesta del servidor:', favoriteRecipes);
 
-      // Actualizar el estado local con las recetas favoritas
-      setFavoriteRecipes(favoriteRecipes);
-
-      console.log('Recetas favoritas obtenidas:', favoriteRecipes);
+      if (Array.isArray(favoriteRecipes) && favoriteRecipes.length > 0) {
+        setFavoriteRecipes(favoriteRecipes);
+        setError(null); // Limpiamos cualquier error previo
+      } else {
+        setFavoriteRecipes([]); // No hay recetas favoritas
+        setError('No tienes recetas favoritas.');
+      }
     } catch (err) {
       console.error('Error al obtener las recetas favoritas:', err.message);
-      alert('Error al obtener las recetas favoritas. Intenta nuevamente.');
+      setError('Hubo un problema al cargar las recetas.');
+    } finally {
+      setLoading(false); // Cambiamos el estado de carga
     }
+  }, [userEmail]);
+
+  // Obtener el correo del usuario cuando se monta el componente
+  useEffect(() => {
+    const email = getUserEmail(); // Llamamos a la función que obtiene el correo
+    console.log('Correo del usuario:', email); // Verificamos el correo obtenido
+
+    if (email) {
+      setUserEmail(email); // Establecemos el correo en el estado
+    } else {
+      setError('No se pudo obtener el correo del usuario.');
+    }
+  }, []); // Este useEffect solo se ejecuta una vez
+
+  // Una vez que tengamos el correo, obtenemos las recetas favoritas
+  useEffect(() => {
+    if (userEmail) {
+      getFavoriteRecipes(); // Llamamos a la API para obtener las recetas
+    }
+  }, [userEmail, getFavoriteRecipes]);
+
+  // Función para guardar el calendario de comidas
+  const saveSchedule = (newSchedule) => {
+    setSchedule(newSchedule); // Solo se actualiza el estado local
   };
 
-  // Cargar recetas favoritas y montar el horario al montar el componente
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Obtener recetas favoritas
-        await getFavoriteRecipes(); // Usamos la función getFavoriteRecipes
-      } catch (error) {
-        console.error('Error al cargar datos:', error);
-      }
-    };
-
-    fetchData();
-  }, [userEmail]); // Cambiado a userEmail para obtener las recetas favoritas y horario
-
-  // Manejar el inicio del arrastre de recetas
+  // Funciones para manejar el drag and drop de recetas
   const handleDragStart = (e, recipe) => {
     e.dataTransfer.setData('recipe', JSON.stringify(recipe));
   };
 
-  // Manejar el evento de soltar recetas en el calendario
-  const handleDrop = async (e, dayIndex, slotIndex) => {
+  const handleDrop = (e, dayIndex, slotIndex) => {
     e.preventDefault();
     const recipe = JSON.parse(e.dataTransfer.getData('recipe'));
     const newSchedule = [...schedule];
     newSchedule[dayIndex][slotIndex] = recipe;
-    setSchedule(newSchedule);
-
-    // Actualizar el backend con el nuevo horario
-    try {
-      await fetch('/api/schedule', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userEmail, 
-          dayIndex,
-          slotIndex,
-          recipeId: recipe._id,  // Enviar el ID de la receta
-        }),
-      });
-    } catch (error) {
-      console.error('Error al actualizar el horario:', error);
-    }
+    saveSchedule(newSchedule); // Solo se actualiza el estado local
   };
 
   const handleDragOver = (e) => {
@@ -109,14 +107,22 @@ const WeeklyCalendar = ({ userEmail, onBackToRecipes }) => {
       <div className="favorites-bar">
         <h3>Recetas Favoritas</h3>
         <div className="favorites-container">
-          {favoriteRecipes.map((recipe, index) => (
-            <RecipeCard
-              key={index}
-              recipe={recipe}
-              draggable={true}
-              onDragStart={(e) => handleDragStart(e, recipe)} // Aquí está el arrastre
-            />
-          ))}
+          {loading ? (
+            <p>Cargando recetas favoritas...</p> // Mensaje de carga mientras se obtienen las recetas
+          ) : error ? (
+            <p>{error}</p> // Mensaje de error si ocurre un problema
+          ) : favoriteRecipes.length === 0 ? (
+            <p>No tienes recetas favoritas.</p> // Mensaje si no hay recetas favoritas
+          ) : (
+            favoriteRecipes.map((recipe) => (
+              <RecipeCard
+                key={recipe._id}
+                recipe={recipe}
+                draggable={true} // La receta es arrastrable
+                onDragStart={(e) => handleDragStart(e, recipe)} // Manejo del inicio de arrastre
+              />
+            ))
+          )}
         </div>
       </div>
 
@@ -128,8 +134,8 @@ const WeeklyCalendar = ({ userEmail, onBackToRecipes }) => {
               <div
                 key={slotIndex}
                 className="meal-slot"
-                onDrop={(e) => handleDrop(e, dayIndex, slotIndex)}
-                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, dayIndex, slotIndex)} // Manejo de la caída
+                onDragOver={handleDragOver} // Permite el arrastre sobre los slots
               >
                 {slot ? <RecipeCard recipe={slot} draggable={false} /> : <div className="empty-slot">+</div>}
               </div>
@@ -142,3 +148,18 @@ const WeeklyCalendar = ({ userEmail, onBackToRecipes }) => {
 };
 
 export default WeeklyCalendar;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

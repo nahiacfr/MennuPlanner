@@ -12,17 +12,26 @@ mongoose
   .then(() => console.log('Conexión a MongoDB exitosa'))
   .catch((err) => console.error('Error al conectar a MongoDB:', err));
 
-// Esquema de usuario con solo el correo electrónico (userId) y recetas favoritas
+// Esquema de usuario utilizando email como identificador único
 const userSchema = new mongoose.Schema({
-  userId: { type: String, required: true, unique: true },  // Usamos el correo electrónico como userId
-  favoriteRecipes: { type: [String], ref: 'Recipe', default: [] }, // Cambiar ObjectId por String para title
+  email: { type: String, required: true, unique: true }, // Email como identificador único
+  favoriteRecipes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Recipe', default: [] }], // Cambio a ObjectId
+  weeklyMenu: {
+    type: [
+      {
+        day: { type: String, required: true }, // Día de la semana
+        meals: { type: [String], default: [] }, // Títulos de recetas asignadas
+      },
+    ],
+    default: [], // Menú vacío por defecto
+  },
 });
 
 const User = mongoose.model('User', userSchema);
 
-// Esquema de receta con solo title
+// Esquema de receta
 const recipeSchema = new mongoose.Schema({
-  title: { type: String, required: true, unique: true },  // Usamos title como identificador único
+  title: { type: String, required: true, unique: true }, // Título único de la receta
   ingredientes: { type: [String], required: true },
   instrucciones: { type: [String], required: true },
   imagenUrl: { type: String, default: '' },
@@ -30,87 +39,143 @@ const recipeSchema = new mongoose.Schema({
 
 const Recipe = mongoose.model('Recipe', recipeSchema);
 
-// Ruta para añadir receta a favoritos
+// Rutas de la API
+
+// Añadir receta a favoritos
 app.post('/api/favorites', async (req, res) => {
-    try {
-      const { userId, recipeTitle, recipeImageUrl } = req.body;  // Cambiar recipeId a recipeTitle y recibir imageUrl
-  
-      // Buscar si el usuario con el correo electrónico existe
-      let user = await User.findOne({ userId: userId });
-  
-      // Si el usuario no existe, se crea uno nuevo con el correo electrónico como userId
-      if (!user) {
-        user = new User({
-          userId: userId,  // Usamos el correo electrónico como userId
-          favoriteRecipes: [],
-        });
-        await user.save();
-      }
-  
-      // Verificar si la receta existe (usando el title)
-      let recipe = await Recipe.findOne({ title: recipeTitle });  // Buscar por title
-  
-      // Si la receta no existe, se crea una nueva receta
-      if (!recipe) {
-        recipe = new Recipe({
-          title: recipeTitle,  // Usar title
-          ingredientes: [],
-          instrucciones: [],
-          imagenUrl: recipeImageUrl || '',  // Asignar la URL de la imagen si se proporciona
-        });
-        await recipe.save();
-      } else {
-        // Si la receta ya existe, actualizamos la imagen si es nueva
-        if (recipeImageUrl && recipe.imagenUrl !== recipeImageUrl) {
-          recipe.imagenUrl = recipeImageUrl;
-          await recipe.save();
-        }
-      }
-  
-      // Añadir la receta a los favoritos si no está ya en la lista
-      if (!user.favoriteRecipes.includes(recipeTitle)) {
-        user.favoriteRecipes.push(recipeTitle);
-        await user.save();
-      }
-  
-      res.json({ message: 'Receta añadida a favoritos', favoriteRecipes: user.favoriteRecipes });
-    } catch (error) {
-      console.error('Error al añadir la receta a favoritos:', error);
-      res.status(500).json({ error: 'Error al añadir la receta a favoritos', details: error.message });
+  const { email, recipeTitle, imagenUrl } = req.body;
+
+  // Validación de email
+  if (!email || typeof email !== 'string' || !email.includes('@')) {
+    return res.status(400).json({
+      error: 'Email inválido o no proporcionado.',
+      details: 'El campo email es requerido y debe ser válido.',
+    });
+  }
+
+  // Validación de recipeTitle
+  if (!recipeTitle || typeof recipeTitle !== 'string') {
+    return res.status(400).json({
+      error: 'Título de receta inválido o no proporcionado.',
+      details: 'El campo recipeTitle es requerido y debe ser válido.',
+    });
+  }
+
+  try {
+    // Buscar receta por título
+    let recipe = await Recipe.findOne({ title: recipeTitle });
+
+    // Si la receta no existe, crear una nueva receta
+    if (!recipe) {
+      recipe = new Recipe({
+        title: recipeTitle,
+        ingredientes: [],  // Definir ingredientes por defecto si no existen
+        instrucciones: [], // Definir instrucciones por defecto si no existen
+        imagenUrl: imagenUrl || '',  // Asignar imagenUrl si existe o cadena vacía por defecto
+      });
+
+      await recipe.save();  // Guardar la receta nueva
     }
-  });
-  
-// Ruta para obtener las recetas favoritas de un usuario
+
+    // Ahora que tenemos la receta, vamos a agregarla a los favoritos del usuario
+    const user = await User.findOneAndUpdate(
+      { email }, 
+      { $addToSet: { favoriteRecipes: recipe._id } }, // Usar el _id de la receta
+      { upsert: true, new: true }  // Si no existe el usuario, crear uno nuevo
+    );
+
+    // Obtener todas las recetas favoritas del usuario utilizando los ObjectIds
+    const favoriteRecipes = await Recipe.find({
+      '_id': { $in: user.favoriteRecipes }  // Buscamos por los _id de las recetas favoritas
+    });
+
+    // Devolver la lista de recetas favoritas del usuario
+    res.status(200).json({
+      message: 'Receta añadida a favoritos.',
+      favoriteRecipes,  // Enviar las recetas favoritas actualizadas
+    });
+    
+  } catch (err) {
+    console.error('Error al añadir la receta a favoritos:', err.message);
+    res.status(500).json({
+      error: 'Error al añadir la receta a favoritos.',
+      details: err.message,
+    });
+  }
+});
+
+// Obtener recetas favoritas
 app.get('/api/favorites', async (req, res) => {
-    try {
-      const { userId } = req.query; // Obtener el correo electrónico del usuario desde los parámetros de consulta
-  
-      if (!userId) {
-        return res.status(400).json({ error: 'El correo electrónico del usuario es obligatorio.' });
-      }
-  
-      // Buscar el usuario por correo electrónico
-      const user = await User.findOne({ userId });
-  
-      if (!user) {
-        return res.json({ favoriteRecipes: [] }); // Si el usuario no existe, devolver lista vacía
-      }
-  
-      // Buscar las recetas favoritas por título
-      const favoriteRecipes = await Recipe.find({ title: { $in: user.favoriteRecipes } });
-  
-      res.json(favoriteRecipes); // Devolver las recetas favoritas
-    } catch (error) {
-      console.error('Error al obtener las recetas favoritas:', error);
-      res.status(500).json({ error: 'Error al obtener las recetas favoritas', details: error.message });
+  try {
+    const { email } = req.query;
+
+    if (!email) {
+      return res.status(400).json({ error: 'El correo electrónico del usuario es obligatorio.' });
     }
-  });
-  
-// Asegúrate de que el servidor escuche en un puerto
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Crear usuario si no existe
+      user = new User({
+        email,
+        favoriteRecipes: [],
+        weeklyMenu: [],  // Menú vacío por defecto
+      });
+
+      await user.save(); // Guardar el usuario creado
+    }
+
+    // Obtener todas las recetas favoritas utilizando los ObjectIds
+    const favoriteRecipes = await Recipe.find({ 
+      '_id': { $in: user.favoriteRecipes } 
+    });
+
+    res.json(favoriteRecipes);
+  } catch (error) {
+    console.error('Error al obtener las recetas favoritas:', error);
+    res.status(500).json({ error: 'Error al obtener las recetas favoritas.', details: error.message });
+  }
+});
+
+// Obtener menú semanal
+const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+app.get('/api/schedule', async (req, res) => {
+  try {
+    const { email } = req.query;
+
+    if (!email) {
+      return res.status(400).json({ error: 'El correo electrónico del usuario es obligatorio.' });
+    }
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Crear usuario si no existe
+      user = new User({
+        email,
+        favoriteRecipes: [],
+        weeklyMenu: daysOfWeek.map((day) => ({ day, meals: [null, null, null] })), // Inicializa correctamente
+      });
+
+      await user.save(); // Guardar el usuario creado
+    }
+
+    res.json(user.weeklyMenu);
+  } catch (error) {
+    console.error('Error al obtener el menú semanal:', error);
+    res.status(500).json({ error: 'Error al obtener el menú semanal.', details: error.message });
+  }
+});
+
+// Configuración del servidor
 const port = 3002;
 app.listen(port, () => {
   console.log(`Servidor escuchando en http://localhost:${port}`);
 });
+
+
 
           
 

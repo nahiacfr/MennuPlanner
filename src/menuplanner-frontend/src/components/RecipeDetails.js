@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import '../styles.css';
-import { getUserId } from '../api'; 
+import { getUserId } from '../api'; // Asegúrate de tener esta función disponible en tu archivo 'api.js'
 
 const RecipeDetails = ({ recipe, onAddToFavorites, onEdit, onAddToMyRecipes }) => {
   const [favoriteMessage, setFavoriteMessage] = useState('');
@@ -42,8 +42,6 @@ const RecipeDetails = ({ recipe, onAddToFavorites, onEdit, onAddToMyRecipes }) =
     }
   };
   
-  
-
   const ingredientsList = recipe.isUserCreated
     ? recipe.ingredients.split(',').map((ingredient) => ingredient.trim()) // Ingredientes de recetas del usuario
     : recipe.extendedIngredients.map((ingredient) => ingredient.original); // Ingredientes de Spoonacular

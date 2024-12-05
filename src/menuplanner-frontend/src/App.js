@@ -54,16 +54,16 @@ function App() {
     }
   };
 
-  // Función para agregar receta a favoritos
+
   const addToFavorites = async (recipe) => {
     try {
-      const userId = getUserId(); // Obtener el ID del usuario
-      if (!userId) {
-        throw new Error('No se ha encontrado el ID del usuario. Inicia sesión nuevamente.');
+      const email = getUserEmail(); // Obtener el correo del usuario
+      if (!email) {
+        throw new Error('No se ha encontrado el correo del usuario. Inicia sesión nuevamente.');
       }
-
+  
       const imageUrl = recipe.imageUrl || recipe.image;
-
+    
       // Enviar la solicitud al backend
       const response = await fetch('http://localhost:3002/api/favorites', {
         method: 'POST',
@@ -71,29 +71,25 @@ function App() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId, // ID del usuario
-          recipeTitle: recipe.title, // Título de la receta
-          recipeImageUrl: imageUrl,
+          email, // Utiliza email en lugar de userId
+          recipeTitle: recipe.title, // Cambiar 'recipeId' por 'recipeTitle'
+          ingredientes: recipe.ingredients, // Añadir ingredientes
+          instrucciones: recipe.instructions, // Añadir instrucciones
+          imagenUrl: imageUrl, // Enviar imagenUrl
         }),
       });
-
-      // Validar respuesta del backend
+    
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Error en la respuesta del servidor:', errorData);
         alert(`Error: ${errorData.error || 'No se pudo agregar la receta a favoritos.'}`);
         return;
       }
-
-      // Actualizar el estado local
-      setFavoriteRecipes((prevFavorites) => {
-        // Evitar duplicados en el estado local
-        if (prevFavorites.some((fav) => fav.title === recipe.title)) {
-          return prevFavorites;
-        }
-        return [...prevFavorites, recipe];
-      });
-
+    
+      // Obtener las recetas favoritas actualizadas desde la respuesta
+      const data = await response.json();
+      setFavoriteRecipes(data.favoriteRecipes); // Actualizar las recetas favoritas
+    
       console.log('Receta añadida a favoritos:', recipe);
     } catch (err) {
       console.error('Error al agregar a favoritos:', err.message);
