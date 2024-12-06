@@ -2,7 +2,6 @@ const API_URL = 'http://localhost:5000/api';
 let userEmail = null; // Variable global para almacenar el correo del usuario
 let userId = null; // Variable global para almacenar el ID del usuario
 
-
 // Registrar un usuario
 export const register = async (nombre, correo, contrasena) => {
   try {
@@ -48,6 +47,7 @@ export const login = async (correo, contrasena) => {
     throw error;
   }
 };
+
 // Función para obtener el correo del usuario
 export const getUserEmail = () => userEmail;
 
@@ -89,4 +89,5 @@ export const getRecipes = async (token) => {
     throw error;
   }
 };
+
 

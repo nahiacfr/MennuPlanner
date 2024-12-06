@@ -34,7 +34,7 @@ const recipeSchema = new mongoose.Schema({
   title: { type: String, required: true, unique: true }, // Título único de la receta
   ingredientes: { type: [String], required: true },
   instrucciones: { type: [String], required: true },
-  imagenUrl: { type: String, default: '' },
+  imagenUrl: { type: String, default: '' },  // Asegúrate de tener este campo bien definido
 });
 
 const Recipe = mongoose.model('Recipe', recipeSchema);
@@ -138,45 +138,8 @@ app.get('/api/favorites', async (req, res) => {
   }
 });
 
-// Obtener menú semanal
-const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-app.get('/api/schedule', async (req, res) => {
-  try {
-    const { email } = req.query;
-
-    if (!email) {
-      return res.status(400).json({ error: 'El correo electrónico del usuario es obligatorio.' });
-    }
-
-    let user = await User.findOne({ email });
-
-    if (!user) {
-      // Crear usuario si no existe
-      user = new User({
-        email,
-        favoriteRecipes: [],
-        weeklyMenu: daysOfWeek.map((day) => ({ day, meals: [null, null, null] })), // Inicializa correctamente
-      });
-
-      await user.save(); // Guardar el usuario creado
-    }
-
-    res.json(user.weeklyMenu);
-  } catch (error) {
-    console.error('Error al obtener el menú semanal:', error);
-    res.status(500).json({ error: 'Error al obtener el menú semanal.', details: error.message });
-  }
-});
-
 // Configuración del servidor
 const port = 3002;
 app.listen(port, () => {
   console.log(`Servidor escuchando en http://localhost:${port}`);
 });
-
-
-
-          
-
-

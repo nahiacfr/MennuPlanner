@@ -1,0 +1,167 @@
+openapi: 3.0.0
+info:
+  title: Recipe API
+  description: API para gestionar usuarios y recetas, incluyendo registro, inicio de sesión y obtención de recetas.
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000/api
+    description: Servidor local
+
+paths:
+  /register:
+    post:
+      summary: Registrar un usuario
+      requestBody:
+        description: Datos necesarios para registrar un usuario.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre:
+                  type: string
+                  example: Juan Pérez
+                correo:
+                  type: string
+                  format: email
+                  example: juan.perez@example.com
+                contrasena:
+                  type: string
+                  format: password
+                  example: contraseña123
+              required:
+                - nombre
+                - correo
+                - contrasena
+      responses:
+        200:
+          description: Usuario registrado exitosamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: string
+                    example: 12345
+        400:
+          description: Error en los datos proporcionados.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Correo ya registrado.
+
+  /login:
+    post:
+      summary: Iniciar sesión
+      requestBody:
+        description: Datos necesarios para iniciar sesión.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                correo:
+                  type: string
+                  format: email
+                  example: juan.perez@example.com
+                contrasena:
+                  type: string
+                  format: password
+                  example: contraseña123
+              required:
+                - correo
+                - contrasena
+      responses:
+        200:
+          description: Inicio de sesión exitoso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5...
+                  userId:
+                    type: string
+                    example: 12345
+        401:
+          description: Credenciales inválidas.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Contraseña incorrecta.
+
+  /recipes:
+    get:
+      summary: Obtener recetas del usuario
+      parameters:
+        - name: usuario_id
+          in: query
+          description: ID del usuario.
+          required: true
+          schema:
+            type: string
+            example: 12345
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Lista de recetas del usuario.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                      example: Ensalada César
+                    ingredients:
+                      type: array
+                      items:
+                        type: string
+                      example: ["Lechuga", "Queso parmesano", "Pollo"]
+                    instructions:
+                      type: array
+                      items:
+                        type: string
+                      example: ["Lavar la lechuga", "Asar el pollo", "Mezclar ingredientes"]
+                    preparationTime:
+                      type: integer
+                      example: 15
+                    imageUrl:
+                      type: string
+                      example: https://example.com/ensalada.jpg
+                    isUserCreated:
+                      type: boolean
+                      example: true
+        401:
+          description: Usuario no autorizado o token inválido.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Token inválido.
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

@@ -2,9 +2,7 @@ import React from 'react';
 import '../styles.css';
 
 const RecipeCard = ({ recipe, draggable, onDragStart }) => {
-  // Si la receta tiene 'imageUrl', es una receta creada por el usuario
-  // Si no tiene 'imageUrl', es una receta importada, así que usamos 'image'
-  const imageUrl = recipe.imageUrl || recipe.image || 'https://via.placeholder.com/150'; // Imagen predeterminada si no existe
+  const imageUrl = recipe.imageUrl || recipe.image || recipe.imagenUrl || 'https://via.placeholder.com/150'; // Imagen predeterminada si no existe
 
   return (
     <div
