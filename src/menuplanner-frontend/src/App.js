@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './styles.css';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
@@ -14,19 +14,35 @@ function App() {
   const [favoriteRecipes, setFavoriteRecipes] = useState([]); // Estado para manejar las recetas favoritas
   const [showAddRecipeForm, setShowAddRecipeForm] = useState(false); // Estado para controlar si se muestra el formulario
   const [activeSection, setActiveSection] = useState('user'); // Estado para gestionar la sección activa
-  const [userToken, setUserToken] = useState(''); // Estado para almacenar el token del usuario
+  const [userToken, setUserToken] = useState(localStorage.getItem('userToken') || ''); // Estado para almacenar el token del usuario
 
   // Función para manejar el login
   const handleLogin = async (token) => {
     setUserToken(token); // Almacenar el token en el estado
     localStorage.setItem('userToken', token); // Guardar el token en localStorage
     setIsLoggedIn(true);
+    await fetchRecipes(token); // Obtener las recetas después de hacer login
+  };
+
+  // Función para obtener las recetas con el token de usuario
+  const fetchRecipes = async (token) => {
     try {
-      const recipes = await getRecipes(token); // Pasar el token de usuario
+      const recipes = await getRecipes(token); // Obtener recetas usando el token del usuario
       setRecipes(recipes); // Guardar las recetas en el estado
     } catch (err) {
       console.error('Error al obtener recetas:', err.message);
       alert('Error al obtener las recetas. Intenta nuevamente.');
+    }
+  };
+
+  // Función para actualizar las recetas, llamada desde otras clases que no tienen el token
+  const updateRecipes = async () => {
+    const token = userToken || localStorage.getItem('userToken'); // Obtener el token del estado o localStorage
+    if (token) {
+      await fetchRecipes(token);
+    } else {
+      console.error('No se ha encontrado el token de usuario.');
+      alert('Por favor, inicie sesión primero.');
     }
   };
 
@@ -37,23 +53,16 @@ function App() {
   // Función para agregar una nueva receta
   const addNewRecipe = async (newRecipe) => {
     try {
-      const userId = getUserId(); // Obtener el ID del usuario
-      if (!userId) {
-        throw new Error('No se ha encontrado el ID del usuario. Inicia sesión nuevamente.');
-      }
-
       setRecipes((prevRecipes) => [...prevRecipes, newRecipe]); // Añadir la receta localmente
       setShowAddRecipeForm(false); // Cerrar el formulario después de añadir la receta
 
       // Actualizar la lista de recetas desde el servidor
-      const updatedRecipes = await getRecipes(userToken); // Pasar el token del usuario
-      setRecipes(updatedRecipes); // Actualizar el estado con las recetas del servidor
+      await fetchRecipes(userToken); // Obtener las recetas después de agregar una nueva
     } catch (err) {
       console.error('Error al actualizar las recetas:', err.message);
       alert('Error al actualizar la lista de recetas. Intenta nuevamente.');
     }
   };
-
 
   const addToFavorites = async (recipe) => {
     try {
@@ -61,9 +70,9 @@ function App() {
       if (!email) {
         throw new Error('No se ha encontrado el correo del usuario. Inicia sesión nuevamente.');
       }
-  
+
       const imageUrl = recipe.imageUrl || recipe.image;
-    
+
       // Enviar la solicitud al backend
       const response = await fetch('http://localhost:3002/api/favorites', {
         method: 'POST',
@@ -78,18 +87,18 @@ function App() {
           imagenUrl: imageUrl, // Enviar imagenUrl
         }),
       });
-    
+
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Error en la respuesta del servidor:', errorData);
         alert(`Error: ${errorData.error || 'No se pudo agregar la receta a favoritos.'}`);
         return;
       }
-    
+
       // Obtener las recetas favoritas actualizadas desde la respuesta
       const data = await response.json();
       setFavoriteRecipes(data.favoriteRecipes); // Actualizar las recetas favoritas
-    
+
       console.log('Receta añadida a favoritos:', recipe);
     } catch (err) {
       console.error('Error al agregar a favoritos:', err.message);
@@ -142,6 +151,8 @@ function App() {
               onAddToFavorites={addToFavorites}
               activeSection={activeSection} // Pasar la sección activa a RecipeViewer
               onSectionChange={handleSectionChange} // Función para manejar el cambio de sección
+              userToken={userToken} // Pasar el token de usuario a RecipeViewer
+              updateRecipes={updateRecipes} 
             />
           )}
         </>

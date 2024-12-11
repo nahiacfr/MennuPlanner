@@ -139,19 +139,23 @@
   gap: 20px;
 }
 
-.favorites-bar {
-  background-color: #9BC89E;
-  padding: 10px;
-  border-radius: 10px;
-  text-align: center;
-}
 
 .favorites-container {
   display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  padding: 10px 0;
+  flex-wrap: nowrap; /* Evita que las recetas se apilen en una columna */
+  overflow-x: auto; /* Permite desplazamiento horizontal si hay muchas recetas */
+  gap: 20px; /* Espaciado entre las recetas */
+  padding: 10px 0; /* Padding para un mejor espaciado */
+  width: 100%; /* Asegura que el contenedor ocupe el 100% del ancho disponible */
+  max-width: 1200px; /* Establece un máximo ancho si lo necesitas */
+  margin: 0 auto; /* Centra el contenedor si se quiere un diseño centrado */
 }
+
+.favorites-container .recipe-card {
+  flex-shrink: 0; /* Asegura que las recetas no se reduzcan en tamaño */
+  width: 150px; /* Establece un tamaño fijo o ajusta según lo necesites */
+}
+
 
 .recipe-card {
   background-color: white;
@@ -168,35 +172,113 @@
   border-radius: 5px;
 }
 
+/* Contenedor principal del planificador */
+.weekly-calendar {
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Cabecera del planificador */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.actions button {
+  background-color: #3b553e;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.actions button:disabled {
+  background-color: #c8c8c8;
+  cursor: not-allowed;
+}
+
+
+
+/* Estructura principal */
 .calendar-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, 1fr); /* Una columna por día */
   gap: 10px;
-}
-
-.day-column {
+  margin: 20px 0;
   background-color: #9BC89E;
-  padding: 10px;
-  border-radius: 10px;
-  text-align: center;
 }
 
+/* Cada columna de día */
+.day-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /*background-color: #f9f9f9;*/
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+/* Recetas dentro del calendario */
+.recipe-card {
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid #3B553E;
+  padding: 5px;
+  text-align: center;
+  cursor: grab;
+  transition: transform 0.3s ease;
+  max-width: 100%; /* Garantiza que no se exceda el tamaño máximo del contenedor */
+  max-height: 100%; /* No excederá la altura máxima */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden; /* Oculta cualquier contenido que se desborde */
+}
+
+.recipe-card img {
+  width: 100%; /* La imagen tomará el 100% del ancho disponible */
+  height: auto; /* Mantiene la proporción de la imagen */
+  object-fit: cover; /* Asegura que la imagen cubra el área sin distorsionarse */
+  border-radius: 5px;
+}
+
+/* Slot de comida */
 .meal-slot {
-  background-color: #F5F5F5;
+  background-color: #f5f5f5;
   border: 1px dashed #3B553E;
   border-radius: 5px;
-  margin: 5px 0;
-  min-height: 80px;
+  min-height: 80px; /* La altura mínima de cada slot */
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 5px;
+  text-align: center;
+  margin-bottom: 10px;
+  overflow: hidden; /* Oculta cualquier desbordamiento de los elementos dentro */
+  box-sizing: border-box; /* Asegura que los márgenes y padding se incluyan en el tamaño total */
 }
 
-.empty-slot {
+/* Aseguramos que el contenido no desborde el slot */
+.meal-slot .empty-slot {
   color: #3B553E;
-  font-size: 24px;
+  font-size: 16px;
   cursor: pointer;
+  text-overflow: ellipsis; /* Añade puntos suspensivos si el texto es demasiado largo */
+  white-space: nowrap; /* Evita que el texto se desborde en varias líneas */
+  overflow: hidden;
 }
+
+
 .recipe-viewer {
   background-color: #9BC89E; /* Consistente con otros elementos */
   padding: 20px;
@@ -424,15 +506,8 @@
   margin-top: 20px;
 }
 
-.favorites-bar {
-  width: 200px;
-  margin-right: 20px;
-}
 
-.favorites-container {
-  display: flex;
-  flex-direction: column;
-}
+
 
 .calendar-grid {
   display: flex;
@@ -458,9 +533,6 @@
   line-height: 100px;
 }
 
-.favorites-container {
-  margin-top: 10px;
-}
 /* Estilo para el mensaje de éxito */
 .alert {
   background-color: #4caf50;
@@ -483,7 +555,7 @@
 }
 
 .navbar button {
-  background-color: #4CAF50;
+  background-color: #3B553E;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -491,13 +563,17 @@
 }
 
 .navbar button:hover {
-  background-color: #45a049;
+  background-color: #1f2c20;
 }
 .recipe-card h4 {
   white-space: nowrap; /* Evitar que el texto haga salto de línea */
   overflow: hidden; /* Ocultar texto que desborda */
   text-overflow: ellipsis; /* Mostrar "..." para texto largo */
   max-width: 200px; /* Ajusta el ancho según tu diseño */
+}
+.meal-slot.drag-over {
+  background-color: #d0f0d0;
+  border: 2px dashed #4caf50;
 }
 
   

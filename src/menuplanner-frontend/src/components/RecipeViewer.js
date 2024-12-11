@@ -5,7 +5,7 @@ import RecipeDetails from './RecipeDetails';
 import WeeklyCalendar from './WeeklyCalendar'; // Importa el componente del menú semanal
 import Navbar from './Navbar';  
 
-const RecipeViewer = ({ availableRecipes, onAddRecipeClick, onShowMenuClick, onAddToFavorites }) => {
+const RecipeViewer = ({ availableRecipes, onAddRecipeClick, onAddToFavorites, updateRecipes}) => {
   const [currentPageUser, setCurrentPageUser] = useState(0); 
   const [currentPageImported, setCurrentPageImported] = useState(0); 
   const [selectedRecipe, setSelectedRecipe] = useState(null);
@@ -19,7 +19,7 @@ const RecipeViewer = ({ availableRecipes, onAddRecipeClick, onShowMenuClick, onA
     ...recipe,
       title: recipe.title, // Asignar el nombre al campo `title` para unificar
   }));
-  const importedRecipes = availableRecipes.filter(recipe => recipe.isImported);
+  
 
   // Clave
   const SPOONACULAR_API_KEY = 'b7477f47c23747af82ece6da3ad33946';  
@@ -30,7 +30,7 @@ const RecipeViewer = ({ availableRecipes, onAddRecipeClick, onShowMenuClick, onA
       // Endpoint de Spoonacular para obtener recetas
       const response = await axios.get('https://api.spoonacular.com/recipes/random', {
         params: {
-          number: 10,  // Número de recetas a obtener
+          number: 20,  // Número de recetas a obtener
           apiKey: SPOONACULAR_API_KEY
         }
       });
@@ -45,6 +45,12 @@ const RecipeViewer = ({ availableRecipes, onAddRecipeClick, onShowMenuClick, onA
   useEffect(() => {
     fetchImportedRecipes();
   }, []);
+
+  // Actualizar la lista de recetas al cambiar de sección
+  useEffect(() => {
+    setCurrentPageUser(0);  // Resetea a la primera página cuando cambia la sección
+    setCurrentPageImported(0);  // Resetea a la primera página cuando cambia la sección
+  }, [activeSection]);
 
   const startIndexUser = currentPageUser * recipesPerPage;
   const endIndexUser = startIndexUser + recipesPerPage;
@@ -79,6 +85,7 @@ const RecipeViewer = ({ availableRecipes, onAddRecipeClick, onShowMenuClick, onA
   };
 
   const handleSelectRecipesUser = () => setActiveSection('user');
+
   const handleSelectRecipesImported = () => setActiveSection('imported');
   const handleSelectMenu = () => setActiveSection('menu'); // Cambiar a "Menu"
 
@@ -97,6 +104,7 @@ const RecipeViewer = ({ availableRecipes, onAddRecipeClick, onShowMenuClick, onA
             recipe={selectedRecipe} 
             onAddToFavorites={() => onAddToFavorites(selectedRecipe)} 
             onEdit={() => console.log('Editar receta:', selectedRecipe)} 
+            updateRecipes={updateRecipes}
           />
         </div>
       ) : (
@@ -149,7 +157,6 @@ const RecipeViewer = ({ availableRecipes, onAddRecipeClick, onShowMenuClick, onA
 
           {activeSection === 'menu' && (
             <div>
-              <h3>Menú Semanal</h3>
               <WeeklyCalendar 
                 favoriteRecipes={availableRecipes.filter(recipe => recipe.isFavorite)}
                 onBackToRecipes={handleBackToRecipes} 

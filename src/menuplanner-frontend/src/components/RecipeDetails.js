@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import '../styles.css';
 import { getUserId } from '../api'; // Asegúrate de tener esta función disponible en tu archivo 'api.js'
 
-const RecipeDetails = ({ recipe, onAddToFavorites, onEdit, onAddToMyRecipes }) => {
+const RecipeDetails = ({ recipe, onAddToFavorites, onEdit, updateRecipes }) => {
   const [favoriteMessage, setFavoriteMessage] = useState('');
 
   const handleAddToFavorites = () => {
@@ -21,22 +20,25 @@ const RecipeDetails = ({ recipe, onAddToFavorites, onEdit, onAddToMyRecipes }) =
       imageUrl: recipe.image || 'https://via.placeholder.com/150',  
       userId: getUserId(),  // Incluye el userId en el cuerpo de la solicitud
     };
-  
+
     console.log('Receta importada:', importedRecipe);  // Verifica que los datos estén correctos
-  
+
     try {
       const response = await fetch('http://localhost:5000/api/recipes/imported/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(importedRecipe),
       });
-  
+
       if (!response.ok) {
         throw new Error('Error al añadir la receta importada');
       }
-  
+
       const data = await response.json();
       console.log('Receta importada añadida:', data);
+      setFavoriteMessage('¡Receta añadida a recetas del usuario!');
+      // Llamar a la función updateUserRecipes después de añadir la receta
+      updateRecipes(); 
     } catch (error) {
       console.error(error);
     }
@@ -90,3 +92,6 @@ const RecipeDetails = ({ recipe, onAddToFavorites, onEdit, onAddToMyRecipes }) =
 };
 
 export default RecipeDetails;
+
+
+
