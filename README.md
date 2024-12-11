@@ -27,23 +27,23 @@ El proyecto contiene tres partes principales:
 ## Cómo ejecutar el proyecto
 
 ### 1. Iniciar el Backend en Python con Docker
-cd /backend-python
-docker-compose up --build
+   cd /backend-python
+   docker-compose up --build
 
 ### 2. Iniciar el Backend en Node
-cd /backend-node
-npm install
-npm install express
-npm install mongoose
-node index.js
+   cd /backend-node
+   npm install
+   npm install express
+   npm install mongoose
+   node index.js
 
 ### 3. Iniciar front end en react
-cd /mennuplaner-frontend
-npm install react react-dom react-scripts
-npm start
+   cd /mennuplaner-frontend/src
+   npm install react react-dom react-scripts
+   npm start
 
 ### 3. OpenApi3.0
-cd /mennuplaner-frontend/src
-npm install -g swagger-ui-watcher
-swagger-ui-watcher ./openapi.yaml
+   cd /mennuplaner-frontend/src
+   npm install -g swagger-ui-watcher
+   swagger-ui-watcher ./openapi.yaml
 
